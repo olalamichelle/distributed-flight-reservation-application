@@ -10,14 +10,16 @@ public class ReservationSys {
 
     private Integer siteTimeStamp;
     private String siteId;
+    ArrayList<HashMap<String, String>> sitesInfo;
 
-    public ReservationSys(ArrayList<Integer> sites, Integer totalSites, String siteId) {
+    public ReservationSys(ArrayList<HashMap<String, String>> sitesInfo, Integer siteNum, String siteId) {
         this.dict = new ArrayList<Reservation>();
         this.log = new ArrayList<EventRecord>();
+        this.timeTable = new Integer[siteNum][siteNum];
 
-        this.timeTable = new Integer[totalSites][totalSites];
         this.siteTimeStamp = 0;
         this.siteId = siteId;
+        this.sitesInfo = sitesInfo;
     }
 
     public boolean isConflict(ArrayList<Integer> flights) {
@@ -41,9 +43,6 @@ public class ReservationSys {
         return false;
     }
 
-    public void siteIdToIdx () {
-
-    }
 
     public boolean insert(String[] orderInfo) {
         String clientName = orderInfo[0];
@@ -67,6 +66,12 @@ public class ReservationSys {
         this.log.add(eventRecord);
 
         // update timetable
+        Integer curSiteIndex = 0;
+        for (int i = 0; i < this.sitesInfo.size(); i++) {
+            HashMap<String, String> curSite = sitesInfo.get(i);
+            if (curSite.get("siteId").equals(this.siteId)) curSiteIndex = 0;
+        }
+        timeTable[curSiteIndex][curSiteIndex] = this.siteTimeStamp;
 
         System.out.println("Reservation submitted for " + clientName);
         return true;

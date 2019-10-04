@@ -1,13 +1,23 @@
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
 
-public class Host {
+
+public class Test {
+
     public static void main(String[] args) {
+
 
         // read host name and port number from json
         try {
@@ -27,10 +37,10 @@ public class Host {
 
             Integer siteNum = allSiteId.size();
             // store info into a hashmap, property -> info, arranged by index of each site
-            ArrayList<HashMap<String, String>> sitesInfo = new ArrayList<>();
+            ArrayList<HashMap<String, String>> Info = new ArrayList<>();
             for (int i = 0; i < siteNum; i++) {
                 HashMap<String, String> tmp = new HashMap<>();
-                sitesInfo.add(tmp);
+                Info.add(tmp);
             }
 
             hosts.keySet().forEach(siteId ->
@@ -57,23 +67,19 @@ public class Host {
                 tmp.put("ip", ipAddr);
                 tmp.put("siteId", siteId.toString());
 
-                sitesInfo.set(siteIndex, tmp);
+                Info.set(siteIndex, tmp);
 //                System.out.println("key: "+ siteId + " value: " + siteInfo);
             });
 
-            for (int i = 0; i < sitesInfo.size(); i++) {
-                HashMap<String,String> curMap = sitesInfo.get(i);
-//                System.out.println("siteId: " + curMap.get("siteId") + " siteIndex: " + i);
+            for (int i = 0; i < Info.size(); i++) {
+                HashMap<String,String> curMap = Info.get(i);
+                System.out.println("siteId: " + curMap.get("siteId") + " siteIndex: " + i);
             }
 
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
 
-        // create another thread to keep receiving msgs from other sites
-
-
-        // main thread keeps receiving msgs from user at this site
 
     }
 }

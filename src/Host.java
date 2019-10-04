@@ -4,10 +4,23 @@ import org.json.simple.parser.ParseException;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class Host {
     public static void main(String[] args) {
+        // current site
+        String curSiteId = args[1];
+        String curStartPort = "";
+        String curEndPort = "";
+        String curIp = "";
+
+        // store info into a hashmap, property -> info, arranged by index of each site
+        ArrayList<HashMap<String, String>> sitesInfo = new ArrayList<>();
+        Integer siteNum = 0;
 
         // read host name and port number from json
         try {
@@ -25,9 +38,7 @@ public class Host {
             });
             Collections.sort(allSiteId);
 
-            Integer siteNum = allSiteId.size();
-            // store info into a hashmap, property -> info, arranged by index of each site
-            ArrayList<HashMap<String, String>> sitesInfo = new ArrayList<>();
+            siteNum = allSiteId.size();
             for (int i = 0; i < siteNum; i++) {
                 HashMap<String, String> tmp = new HashMap<>();
                 sitesInfo.add(tmp);
@@ -42,9 +53,9 @@ public class Host {
                 String udpEndPort = siteInfo.get("udp_end_port").toString();
                 String ipAddr = (String) siteInfo.get("ip_address");
 
-                System.out.println("udp start port: " + udpStartPort);
-                System.out.println("udp end port: " + udpEndPort);
-                System.out.println("ip address: " + ipAddr);
+//                System.out.println("udp start port: " + udpStartPort);
+//                System.out.println("udp end port: " + udpEndPort);
+//                System.out.println("ip address: " + ipAddr);
 
                 Integer siteIndex = 0;
                 for (int i = 0; i < allSiteId.size(); i++) {
@@ -61,17 +72,43 @@ public class Host {
 //                System.out.println("key: "+ siteId + " value: " + siteInfo);
             });
 
-            for (int i = 0; i < sitesInfo.size(); i++) {
-                HashMap<String,String> curMap = sitesInfo.get(i);
+//            for (int i = 0; i < sitesInfo.size(); i++) {
+//                HashMap<String,String> curMap = sitesInfo.get(i);
 //                System.out.println("siteId: " + curMap.get("siteId") + " siteIndex: " + i);
-            }
+//            }
 
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
 
-        // create another thread to keep receiving msgs from other sites
+        // find current site info
+        for (int i = 0; i < sitesInfo.size(); i++) {
+            if (sitesInfo.get(i).get("siteId").equals(curSiteId)) {
+                HashMap<String, String> curMap = sitesInfo.get(i);
+                curStartPort = curMap.get("startPort");
+                curEndPort = curMap.get("endPort");
+                curIp = curMap.get("ip");
+            }
+        }
 
+        DatagramSocket udpSocket;
+
+        ArrayList<Integer> ports = new ArrayList<>();
+        for (int i = Integer.parseInt(curStartPort); i <= Integer.parseInt(curEndPort); i++) {
+            ports.add(i);
+        }
+
+        try {
+            udpSocket = new DatagramSocket(ports.get(0), InetAddress.getByName(curIp));
+
+
+        } catch (SocketException e) {
+            System.out.println("Socket Exception");
+        } catch (UnknownHostException e) {
+            System.out.println("unknown host Exception");
+        }
+
+        // create another thread to keep receiving msgs from other sites
 
         // main thread keeps receiving msgs from user at this site
 

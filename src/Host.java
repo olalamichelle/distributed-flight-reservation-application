@@ -38,6 +38,7 @@ public class Host {
             });
             Collections.sort(allSiteId);
 
+            // initialze array storing all informations of all sites
             siteNum = allSiteId.size();
             for (int i = 0; i < siteNum; i++) {
                 HashMap<String, String> tmp = new HashMap<>();
@@ -101,7 +102,6 @@ public class Host {
         try {
             udpSocket = new DatagramSocket(ports.get(0), InetAddress.getByName(curIp));
 
-
         } catch (SocketException e) {
             System.out.println("Socket Exception");
         } catch (UnknownHostException e) {
@@ -109,6 +109,7 @@ public class Host {
         }
 
         // create another thread to keep receiving msgs from other sites
+
 
         // main thread keeps receiving msgs from user at this site
 

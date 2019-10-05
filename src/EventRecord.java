@@ -4,10 +4,11 @@ public class EventRecord {
     private String siteId;
     private int siteTimestamp;
 
-    public EventRecord(String operation, String site_id, int site_timestamp) {
+    public EventRecord(String operation, String site_id, int site_timestamp, Reservation reservation) {
         this.setOperation(operation);
         this.setSiteId(site_id);
         this.setSiteTimestamp(site_timestamp);
+        this.reservation = reservation;
     }
 
     public Reservation getReservation() {

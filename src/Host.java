@@ -5,10 +5,10 @@ import org.json.simple.parser.ParseException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Scanner;
 
 public class Host {
     public static void main(String[] args) {
@@ -92,6 +92,13 @@ public class Host {
             }
         }
 
+        // Construct current site
+        ReservationSys mySite = new ReservationSys(sitesInfo, siteNum, curSiteId);
+
+        // Crash and recover here
+        // Operate later
+
+
         DatagramSocket udpSocket;
 
         ArrayList<Integer> ports = new ArrayList<>();
@@ -99,19 +106,56 @@ public class Host {
             ports.add(i);
         }
 
-        try {
-            udpSocket = new DatagramSocket(ports.get(0), InetAddress.getByName(curIp));
-
-        } catch (SocketException e) {
-            System.out.println("Socket Exception");
-        } catch (UnknownHostException e) {
-            System.out.println("unknown host Exception");
-        }
-
         // create another thread to keep receiving msgs from other sites
 
 
         // main thread keeps receiving msgs from user at this site
+        while (true) {
+            System.out.println("Please enter the command: ");
+            Scanner in = new Scanner(System.in);
+            String commandLine = in.nextLine();
+            System.out.println("User input " + commandLine);
+            String[] input = commandLine.split("\\s+");
 
+            if (input[0] == "reserve") {
+                String client = input[1];
+                String[] flights = input[2].split(",");
+                // Operates here
+
+            } else if (input[0] == "cancel") {
+                String client = input[1];
+                // Operates here
+
+            } else if (input[0] == "view") {
+                // Print dictionary here
+
+            } else if (input[0] == "log") {
+                // Print log here
+
+            } else if (input[0] == "send") {
+                String recipient = input[1];
+                // Send log to recipient
+
+            } else if (input[0] == "sendall") {
+                // Send log to all sites
+
+            } else if (input[0] == "clock") {
+                // Print the matrix clock
+
+            } else if (input[0] == "smallsend") {
+                // Implement later
+                System.out.println("Why you do this to me?");
+
+            } else if (input[0] == "smallsendall") {
+                // Implement later
+                System.out.println("I have no idea what's going on here.");
+
+            } else if (input[0] == "quit") {
+                System.exit(0);
+
+            } else {
+                System.out.println("Oops, something is going wrong here!");
+            }
+        }
     }
 }

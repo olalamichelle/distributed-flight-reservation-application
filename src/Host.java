@@ -5,13 +5,14 @@ import org.json.simple.parser.ParseException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 
 public class Host {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SocketException {
         // current site
         String curSiteId = args[1];
         String curStartPort = "";
@@ -99,15 +100,10 @@ public class Host {
         // Operate later
 
 
-        DatagramSocket udpSocket;
-
-        ArrayList<Integer> ports = new ArrayList<>();
-        for (int i = Integer.parseInt(curStartPort); i <= Integer.parseInt(curEndPort); i++) {
-            ports.add(i);
-        }
+        DatagramSocket udpSocket = new DatagramSocket(Integer.parseInt(curStartPort));
 
         // create another thread to keep receiving msgs from other sites
-
+        new Listener(udpSocket, sitesInfo, mySite).start();
 
         // main thread keeps receiving msgs from user at this site
         while (true) {
@@ -117,45 +113,49 @@ public class Host {
             System.out.println("User input " + commandLine);
             String[] input = commandLine.split("\\s+");
 
-            if (input[0] == "reserve") {
+            if (input[0].equals("reserve")) {
                 String client = input[1];
                 String[] flights = input[2].split(",");
                 // Operates here
 
-            } else if (input[0] == "cancel") {
+            } else if (input[0].equals("cancel")) {
                 String client = input[1];
                 // Operates here
 
-            } else if (input[0] == "view") {
-                // Print dictionary here
+            } else if (input[0].equals("view")) {// Print dictionary here
+                mySite.printDictionary();
 
-            } else if (input[0] == "log") {
-                // Print log here
+            } else if (input[0].equals("log")) {// Print log here
+                mySite.printLog();
 
-            } else if (input[0] == "send") {
+            } else if (input[0].equals("send")) {
                 String recipient = input[1];
                 // Send log to recipient
 
-            } else if (input[0] == "sendall") {
+            } else if (input[0].equals("sendall")) {
                 // Send log to all sites
 
-            } else if (input[0] == "clock") {
-                // Print the matrix clock
+            } else if (input[0].equals("clock")) {// Print the matrix clock
+                mySite.printClock();
 
-            } else if (input[0] == "smallsend") {
+            } else if (input[0].equals("smallsend")) {
                 // Implement later
-                System.out.println("Why you do this to me?");
+                System.out.println("Why you do this to me??");
 
-            } else if (input[0] == "smallsendall") {
+            } else if (input[0].equals("smallsendall")) {
                 // Implement later
                 System.out.println("I have no idea what's going on here.");
 
-            } else if (input[0] == "quit") {
+            } else if (input[0].equals("quit")) {
                 System.exit(0);
 
             } else {
                 System.out.println("Oops, something is going wrong here!");
             }
         }
+    }
+
+    public void sendMsgToOthers(ReservationSys mySite, DatagramSocket udpsock, ArrayList<HashMap<String, String>> sitesInfo, ArrayList<String> recipients) {
+
     }
 }

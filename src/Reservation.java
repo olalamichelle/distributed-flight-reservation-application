@@ -34,4 +34,14 @@ public class Reservation {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String printFlight() {
+        if (flights.isEmpty()) return "";
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < flights.size(); i++) {
+            if (i != flights.size() - 1) res.append(flights.get(i)).append(",");
+            res.append(flights.get(i));
+        }
+        return res.toString();
+    }
 }

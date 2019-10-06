@@ -1,5 +1,7 @@
-import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 
 public class ReservationSys {
     // need to backup for site recovery
@@ -228,6 +230,37 @@ public class ReservationSys {
         return this.timeTable[targetSiteIdx][eventSiteIdx] >= eventRecord.getSiteTimestamp();
     }
 
+    public void printLog() {//private ArrayList<EventRecord> log;
+        for (int i = 0; i < log.size(); i++) {
+            EventRecord cur = log.get(i);
+            System.out.println(cur.getOperation() + " " +
+                    cur.getReservation().getClientName() + " "
+                    + cur.getReservation().printFlight());
+        }
+    }
 
+    public void printDictionary() {//private ArrayList<Reservation> dict;
+        for (int i = 0; i < dict.size(); i++) {
+            Collections.sort(dict, new CustomComparator());
+            System.out.println(dict.get(i).getClientName() + " " + dict.get(i).printFlight()
+                    + " " +dict.get(i).getStatus());
+        }
+    }
 
+    public void printClock() {//private Integer[][] timeTable;
+        for (int i = 0; i < timeTable.length; i++) {
+            for (int j = 0; j < timeTable[0].length; j++) {
+                System.out.print(timeTable[i][j] + " ");
+            }
+            System.out.printf("%n");
+        }
+    }
+
+}
+
+class CustomComparator implements Comparator<Reservation> {
+    @Override
+    public int compare(Reservation o1, Reservation o2) {
+        return o1.getClientName().compareTo(o2.getClientName());
+    }
 }

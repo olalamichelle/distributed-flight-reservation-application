@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /*
 The implementation of UDP listener
@@ -10,10 +12,11 @@ Listen the msgs from other sites
 public class Listener extends Thread {
     private DatagramSocket socket;
     private boolean running;
-    private byte[] buffer = new byte[1024];
+    private byte[] buffer = new byte[65535];
 
-    public Listener() {
-
+    public Listener(DatagramSocket updSocket,  ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) {
+        this.socket = updSocket;
+        running = false;
     }
 
     public void run() {
@@ -35,6 +38,8 @@ public class Listener extends Thread {
         }
         socket.close();
     }
+
+
     // Deserialize the byte array and reconstruct the object
     /*
     public deserialize() {

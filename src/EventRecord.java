@@ -1,4 +1,4 @@
-public class EventRecord {
+public class EventRecord implements Comparable<EventRecord> {
     private Reservation reservation;
     private String operation;
     private String siteId;
@@ -9,6 +9,13 @@ public class EventRecord {
         this.setSiteId(site_id);
         this.setSiteTimestamp(site_timestamp);
         this.reservation = reservation;
+    }
+
+    // sort from small to large
+    @Override
+    public int compareTo(EventRecord r) {
+        int Timecmp = this.siteTimestamp - r.getSiteTimestamp();
+        return Timecmp != 0 ? Timecmp : this.reservation.getClientName().compareTo(r.reservation.getClientName());
     }
 
     public Reservation getReservation() {

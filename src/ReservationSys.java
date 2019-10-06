@@ -1,13 +1,11 @@
+import java.awt.*;
 import java.util.*;
-import java.net.*;
-import java.io.*;
-import java.util.stream.Collectors;
 
 public class ReservationSys {
     // need to backup for site recovery
     private ArrayList<Reservation> dict; // array of reservation object
     private ArrayList<EventRecord> log; // array of eventRecord object
-    private Integer timeTable[][];
+    private Integer[][] timeTable;
 
     private Integer siteTimeStamp;
     private String siteId;
@@ -43,16 +41,36 @@ public class ReservationSys {
         return null;
     }
 
-    // flights: flights in msg
-    public boolean isConflict(ArrayList<Integer> flights) {
+    // get the latest flight reservation record
+    public EventRecord latestRecord(Integer flight) {
+        Collections.sort(this.log);
+        for (int i = this.log.size() - 1; i >= 0; i--) {
+            ArrayList<Integer> curFlights = log.get(i).getReservation().getFlights();
+            if (curFlights.contains(flight)) return log.get(i);
+        }
+        return null;
+    }
 
-        HashMap<Integer, Integer> ReservedFlights = new HashMap<>(); // keep track of reserved flights in dict
+    // flights: flights in msg
+    // return arraylist of conflicted record in current dict
+    public ArrayList<EventRecord> isConflict(ArrayList<Integer> flights) {
+        ArrayList<EventRecord> conflictRecord = new ArrayList<>();
+
+        // keep track of reserved flights in dict, mapping flight number to count
+        HashMap<Integer, Integer> ReservedFlights = new HashMap<>();
+        // mapping flight number to latest event record
+        HashMap<Integer, EventRecord> flightsToReserv = new HashMap<>();
 
         for (int i = 0; i < this.dict.size(); i++) {
             // reserved flights provided in msg
-            ArrayList<Integer> curReservedFlights = dict.get(i).getFlights();
+            ArrayList<Integer> curReservedFlights = this.dict.get(i).getFlights();
             for (int j = 0; j < curReservedFlights.size(); j++) {
                 Integer curFlight = curReservedFlights.get(j);
+
+                // map flight number to reservation
+                EventRecord curLatestRecord = latestRecord(curFlight);
+                flightsToReserv.put(curFlight, curLatestRecord);
+
                 // current flight counts in dictionary
                 Integer curCnt = ReservedFlights.get(curReservedFlights.get(j));
                 ReservedFlights.put(curFlight, (curCnt == null) ? 1 : curCnt + 1);
@@ -61,11 +79,11 @@ public class ReservationSys {
 
         for (int i = 0; i < flights.size(); i++) {
             if (ReservedFlights.get(flights.get(i)) == 2) {
-                return true;
+                conflictRecord.add(flightsToReserv.get(flights.get(i)));
             }
         }
 
-        return false;
+        return conflictRecord;
     }
 
 
@@ -76,7 +94,7 @@ public class ReservationSys {
             flights.add(Integer.parseInt(s));
         }
 
-        if (isConflict(flights)) {
+        if (isConflict(flights) != null) {
             System.out.println("Cannot schedule reservation for " + clientName);
             return false;
         }
@@ -118,13 +136,94 @@ public class ReservationSys {
         return true;
     }
 
-    public void update() {
+    // TODO: status change
+    // TODO: truncate log
+    public void update(CommunicateInfo recInfo, String senderId) {
+        // resolve received information
+        ArrayList<EventRecord> recEventRecords = recInfo.getEventRecords();
+        Integer siteNum = this.sitesInfo.size();
+        Integer[][] recTimeTable = recInfo.getTimeTable();
 
+        // store only new event record
+        ArrayList<EventRecord> NE = new ArrayList<>();
+        for (int i = 0; i < recEventRecords.size(); i++) {
+            if (!hasRec(recEventRecords.get(i), this.siteId)) {
+                NE.add(recEventRecords.get(i));
+            }
+        }
+
+        // update timetable
+        Integer curSiteIdx = siteIdToIdx(this.siteId);
+        Integer senderSiteIdx = siteIdToIdx(senderId);
+
+        for (int j = 0; j < siteNum; j++) {
+            this.timeTable[curSiteIdx][j] = Integer.max(this.timeTable[curSiteIdx][j], recTimeTable[senderSiteIdx][j]);
+        }
+
+        for (int j = 0; j < siteNum; j++) {
+            for (int l = 0; l < siteNum; l++) {
+                this.timeTable[j][l] = Integer.max(this.timeTable[j][l], recTimeTable[j][l]);
+            }
+        }
+
+        // update log for every new record
+        for (int i = 0; i < NE.size(); i++) {
+            this.log.add(NE.get(i));
+        }
+
+        // update dictionary for every new record
+        for (int i = 0; i < NE.size(); i++) {
+            if (NE.get(i).getOperation().equals("delete")) {
+                this.dict.remove(NE.get(i).getReservation());
+            }
+            else if (NE.get(i).getOperation().equals("insert")) {
+                // find out whether this event record is deleted later
+                int deletedLater = 0;
+                for (int j = 0; j < NE.size(); j++) {
+                    if (NE.get(j).getOperation().equals("delete")
+                            && NE.get(j).getReservation().equals(NE.get(i).getReservation())) {
+                        deletedLater = 1;
+                    }
+                }
+                if (deletedLater == 1) continue;
+
+                // detect conflicts
+                ArrayList<EventRecord> conflictsRecords = new ArrayList<>(); // store all the conflicted records
+                conflictsRecords = isConflict(NE.get(i).getReservation().getFlights());
+                conflictsRecords.add(NE.get(i));
+                Collections.sort(conflictsRecords);
+                // no conflict
+                if (conflictsRecords.size() == 1) {
+                    this.dict.add(NE.get(i).getReservation());
+                }
+                // delete current record
+                else if (conflictsRecords.size() >= 2 && conflictsRecords.get(1) == NE.get(i)) {
+                    this.siteTimeStamp += 1;
+                    EventRecord deleteCurRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
+                    this.log.add(deleteCurRec);
+                    this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
+
+                    System.out.println("Reservation record for: " + NE.get(i).getReservation().getClientName() + " canceled.");
+                }
+                // delete local record
+                else {
+                    this.siteTimeStamp += 1;
+                    EventRecord deleteLocalRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(1).getReservation());
+                    this.log.add(deleteLocalRec);
+                    this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
+                    this.dict.remove(conflictsRecords.get(1).getReservation());
+                    this.dict.add(NE.get(i).getReservation());
+
+                    System.out.println("Reservation record for: " + conflictsRecords.get(1).getReservation().getClientName() + " canceled.");
+                }
+            }
+        }
     }
 
+    // current site's knowledge about what targetsite knows about event
     public boolean hasRec(EventRecord eventRecord, String targetSiteId) {
         String siteWhereEventHappened = eventRecord.getSiteId();
-        Integer eventSiteIdx = siteIdToIdx(eventRecord.getSiteId());
+        Integer eventSiteIdx = siteIdToIdx(siteWhereEventHappened);
         Integer targetSiteIdx = siteIdToIdx(targetSiteId);
         return this.timeTable[targetSiteIdx][eventSiteIdx] >= eventRecord.getSiteTimestamp();
     }

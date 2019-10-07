@@ -2,17 +2,21 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 
 public class Host {
-    public static void main(String[] args) throws SocketException {
+    public static void main(String[] args) throws IOException {
         // current site
         String curSiteId = args[1];
         String curStartPort = "";
@@ -96,31 +100,38 @@ public class Host {
         // Construct current site
         ReservationSys mySite = new ReservationSys(sitesInfo, siteNum, curSiteId);
 
-        // Crash and recover here
-        // Operate later
+        // TODO: Crash and recover here
 
 
-        DatagramSocket udpSocket = new DatagramSocket(Integer.parseInt(curStartPort));
+        // Start port is for listening
+        // End port is for send
+        // Create receive socket by start port number
+        DatagramSocket receiveSocket = new DatagramSocket(null);
+        InetSocketAddress receiveAddress = new InetSocketAddress(curIp, Integer.parseInt(curStartPort));
+        receiveSocket.bind(receiveAddress);
+        new Listener(receiveSocket, sitesInfo, mySite).start();// child thread go here
 
-        // create another thread to keep receiving msgs from other sites
-        new Listener(udpSocket, sitesInfo, mySite).start();
+        // Create send socket by end port number
+        DatagramSocket sendSocket = new DatagramSocket(null);
+        InetSocketAddress sendAddress = new InetSocketAddress(curIp, Integer.parseInt(curEndPort));
+        sendSocket.bind(sendAddress);
 
         // main thread keeps receiving msgs from user at this site
         while (true) {
             System.out.println("Please enter the command: ");
             Scanner in = new Scanner(System.in);
             String commandLine = in.nextLine();
-            System.out.println("User input " + commandLine);
+            System.out.println("User input: " + commandLine);
             String[] input = commandLine.split("\\s+");
 
             if (input[0].equals("reserve")) {
                 String client = input[1];
                 String[] flights = input[2].split(",");
-                // Operates here
+                // TODO: Reserve
 
             } else if (input[0].equals("cancel")) {
                 String client = input[1];
-                // Operates here
+                // TODO: Cancel
 
             } else if (input[0].equals("view")) {// Print dictionary here
                 mySite.printDictionary();
@@ -128,12 +139,20 @@ public class Host {
             } else if (input[0].equals("log")) {// Print log here
                 mySite.printLog();
 
-            } else if (input[0].equals("send")) {
+            } else if (input[0].equals("send")) {// Send log to a specific site
                 String recipient = input[1];
-                // Send log to recipient
+                ArrayList<String> recipients = new ArrayList<>();
+                recipients.add(recipient);
+                sendMsgToOthers(mySite, sendSocket, sitesInfo, recipients);
 
-            } else if (input[0].equals("sendall")) {
-                // Send log to all sites
+            } else if (input[0].equals("sendall")) {// Send log to all sites
+                ArrayList<String> recipients = new ArrayList<>();
+                for (int i = 0; i < sitesInfo.size(); i++) {
+                    if (sitesInfo.get(i).get("siteId").equals(curSiteId)) continue;
+                    recipients.add(sitesInfo.get(i).get("siteId"));
+                }
+                sendMsgToOthers(mySite, sendSocket, sitesInfo, recipients);
+
 
             } else if (input[0].equals("clock")) {// Print the matrix clock
                 mySite.printClock();
@@ -155,7 +174,44 @@ public class Host {
         }
     }
 
-    public void sendMsgToOthers(ReservationSys mySite, DatagramSocket udpsock, ArrayList<HashMap<String, String>> sitesInfo, ArrayList<String> recipients) {
+    // TODO
+    // Identify the the necessary partial log for sending to each target site
+    public static CommunicateInfo buildMsg(ReservationSys mySite, String targetSite, ArrayList<HashMap<String, String>> sitesInfo) {
+        // TODO: check what is target site knows about the other sites and truncate the log
+        CommunicateInfo res = new CommunicateInfo();
 
+        return res;
     }
+
+    // Serialize the CommunicateInfo to byte array
+    public static byte[] serialize(Object obj) throws IOException {
+        try(ByteArrayOutputStream b = new ByteArrayOutputStream()){
+            try(ObjectOutputStream o = new ObjectOutputStream(b)){
+                o.writeObject(obj);
+            }
+            return b.toByteArray();
+        }
+    }
+
+    // Only send the log that is identified as necessary
+    public static void sendMsgToOthers(ReservationSys mySite, DatagramSocket sendSocket,
+                                ArrayList<HashMap<String, String>> sitesInfo,
+                                ArrayList<String> recipients) throws IOException {
+        for (int i = 0; i < recipients.size(); i++) {
+            String ipAddress = null;
+            String receivePort = null;
+            for (int j = 0; j < sitesInfo.size(); j++) {
+                if (sitesInfo.get(j).get("siteId").equals(recipients.get(i))) {
+                    ipAddress = sitesInfo.get(j).get("ip");
+                    receivePort = sitesInfo.get(j).get("startPort");
+                    break;
+                }
+            }
+            InetAddress targetIP = InetAddress.getByName(ipAddress);
+            byte[] sendArray = serialize(buildMsg(mySite, recipients.get(i), sitesInfo));
+            DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
+            sendSocket.send(sendPacket);
+        }
+    }
+
 }

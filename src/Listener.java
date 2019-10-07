@@ -12,13 +12,11 @@ Listen the msgs from a specific site
  */
 public class Listener extends Thread {
     private DatagramSocket socket;
-    private String listenTo;// the site ID this socket listens to
     private boolean running;
     private byte[] buffer = new byte[65535];
 
-    public Listener(DatagramSocket updSocket,  ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite, String listenTo) {
+    public Listener(DatagramSocket updSocket,  ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) {
         this.socket = updSocket;
-        this.listenTo = listenTo;
         running = false;
     }
 
@@ -33,9 +31,17 @@ public class Listener extends Thread {
                 e.printStackTrace();
             }
 
-            System.out.println("Got something from site " + listenTo);
+            String senderIp = packet.getAddress().getHostAddress();
+            String senderId = null;
+            for (int i = 0; i < sitesInfo.size(); i++) {
+                if (sitesInfo.get(i).get("ip").equals(senderIp)) {
+                    senderId = sitesInfo.get(i).get("siteId");
+                    System.out.println("Got something from site " + senderId);
+                    break;
+                }
+            }
             // Update the current site based on the received information
-            mySite.update((CommunicateInfo) deserialize(packet.getData()), listenTo);
+            mySite.update((CommunicateInfo) deserialize(packet.getData()), senderId);
             // TODO: send received confirmation?
 
             buffer = new byte[65535];//reset

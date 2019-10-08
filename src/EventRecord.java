@@ -11,7 +11,11 @@ public class EventRecord implements Comparable<EventRecord> {
         this.reservation = reservation;
     }
 
-    // sort from small to large
+    /**
+     * helper function to sort event record by its timestamp and client name
+     * @param r
+     * @return
+     */
     @Override
     public int compareTo(EventRecord r) {
         int Timecmp = this.siteTimestamp - r.getSiteTimestamp();

@@ -5,6 +5,7 @@ public class Reservation {
     private ArrayList<Integer> flights;
     private String status;
 
+
     Reservation(String clientName, String status, ArrayList<Integer> flights) {
         this.clientName = clientName;
         this.status = status;

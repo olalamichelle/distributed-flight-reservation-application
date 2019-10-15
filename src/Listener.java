@@ -15,15 +15,18 @@ public class Listener extends Thread {
     private boolean running;
     private byte[] buffer = new byte[65535];
 
+    // CONSTRUCTOR
     public Listener(DatagramSocket updSocket,  ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) {
         this.socket = updSocket;
         this.running = false;
     }
 
+    // HELPERS
     public void run(ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) throws IOException, ClassNotFoundException {
         this.running = true;
         DatagramPacket packet = null;
         while (this.running) {
+
             packet = new DatagramPacket(this.buffer, this.buffer.length);
             try {
                 socket.receive(packet);// blocks until a msg arrives
@@ -40,6 +43,8 @@ public class Listener extends Thread {
                     break;
                 }
             }
+            System.out.println("successfully received from " + senderId);
+
             // Update the current site based on the received information
             mySite.update((CommunicateInfo) deserialize(packet.getData()), senderId);
             // TODO: send received confirmation?
@@ -48,7 +53,6 @@ public class Listener extends Thread {
         }
         socket.close();
     }
-
 
     // Deserialize the byte array and reconstruct the object
     public static Object deserialize(byte[] buffer) throws IOException, ClassNotFoundException{

@@ -1,6 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class CommunicateInfo {
+public class CommunicateInfo implements Serializable {
+    private static final long serialVersionUID = -6101917866430318484L;
     private ArrayList<EventRecord> eventRecords;
     private Integer timeTable[][];
 

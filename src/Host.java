@@ -14,12 +14,8 @@ import java.util.Scanner;
 
 public class Host {
     public static void main(String[] args) throws IOException {
-        // current site
-        String curSiteId = args[0];
-        String curStartPort = "";
-        String curEndPort = "";
-        String curIp = "";
 
+        // get all sites' information from knownhost
         // store info into a hashmap, property -> info, arranged by index of each site
         ArrayList<HashMap<String, String>> sitesInfo = new ArrayList<>();
         Integer siteNum = 0;
@@ -84,13 +80,26 @@ public class Host {
             e.printStackTrace();
         }
 
+        // ---------test---------//
+        String id = "alpha";
+        System.out.println("current site is: " + id);
+
         // find current site info
+        String curSiteId = "";
+        String curStartPort = "";
+        String curEndPort = "";
+        String curIp = "";
+
+        InetAddress inetAddress = InetAddress.getLocalHost();
+        curIp = inetAddress.getHostAddress();
+
+        // FIXME: need to change back to ip
         for (int i = 0; i < sitesInfo.size(); i++) {
-            if (sitesInfo.get(i).get("siteId").equals(curSiteId)) {
+            if (sitesInfo.get(i).get("siteId").equals(id)) {
                 HashMap<String, String> curMap = sitesInfo.get(i);
+                curSiteId = curMap.get("siteId");
                 curStartPort = curMap.get("startPort");
                 curEndPort = curMap.get("endPort");
-                curIp = curMap.get("ip");
             }
         }
 
@@ -107,7 +116,7 @@ public class Host {
         }
 
         // Start port is for listening
-        // End port is for send
+        // End port is for sending
         // Create receive socket by start port number
         DatagramSocket receiveSocket = new DatagramSocket(null);
         InetSocketAddress receiveAddress = new InetSocketAddress(curIp, Integer.parseInt(curStartPort));
@@ -195,12 +204,17 @@ public class Host {
 
     // Serialize the CommunicateInfo to byte array
     public static byte[] serialize(Object obj) throws IOException {
-        try(ByteArrayOutputStream b = new ByteArrayOutputStream()){
-            try(ObjectOutputStream o = new ObjectOutputStream(b)){
-                o.writeObject(obj);
-            }
-            return b.toByteArray();
-        }
+//        try(ByteArrayOutputStream b = new ByteArrayOutputStream()){
+//            try(ObjectOutputStream o = new ObjectOutputStream(b)){
+//                o.writeObject(obj);
+//            }
+//            return b.toByteArray();
+//        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(obj);
+        oos.flush();
+        return bos.toByteArray();
     }
 
     // Only send the log that is identified as necessary
@@ -221,6 +235,8 @@ public class Host {
             byte[] sendArray = serialize(buildMsg(mySite, recipients.get(i), sitesInfo));
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);
+
+            System.out.println("successfully sent to " + recipients.get(i));
         }
     }
 

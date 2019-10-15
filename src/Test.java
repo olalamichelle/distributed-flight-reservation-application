@@ -201,7 +201,8 @@ public class Test {
 //            System.out.println("read dictionary file error");
 //        }
 
-        File tempFile = new File("timeTable.txt");
-        System.out.println("exists?" + tempFile.exists());
+//        File tempFile = new File("timeTable.txt");
+//        System.out.println("exists?" + tempFile.exists());
+
     }
 }

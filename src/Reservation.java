@@ -58,11 +58,11 @@ public class Reservation {
     }
 
     public String printFlight() {
-        if (flights.isEmpty()) return "";
+        if (this.flights.isEmpty()) return "";
         StringBuilder res = new StringBuilder();
-        for (int i = 0; i < flights.size(); i++) {
-            if (i != flights.size() - 1) res.append(flights.get(i)).append(",");
-            res.append(flights.get(i));
+        for (int i = 0; i < this.flights.size(); i++) {
+            if (i != this.flights.size() - 1) res.append(this.flights.get(i)).append(",");
+            else res.append(this.flights.get(i));
         }
         return res.toString();
     }

@@ -20,6 +20,11 @@ public class ReservationSys {
         this.dict = new ArrayList<Reservation>();
         this.log = new ArrayList<EventRecord>();
         this.timeTable = new Integer[siteNum][siteNum];
+        for (int i = 0; i < siteNum; i++) {
+            for (int j = 0; j < siteNum; j++) {
+                this.timeTable[i][j] = 0;
+            }
+        }
 
         this.siteTimeStamp = 0;
         this.siteId = siteId;
@@ -80,6 +85,11 @@ public class ReservationSys {
         // recover time table
         try {
             this.timeTable = new Integer[siteNum][siteNum];
+            for (int i = 0; i < siteNum; i++) {
+                for (int j = 0; j < siteNum; j++) {
+                    this.timeTable[i][j] = 0;
+                }
+            }
             BufferedReader timeReader = new BufferedReader(new FileReader("timeTable.txt"));
             String line = "";
             int row = 0;
@@ -131,6 +141,7 @@ public class ReservationSys {
                 }
                 Reservation curRes = new Reservation(cols[0], cols[2], flights);
                 EventRecord curEvent = new EventRecord(cols[3], cols[4], Integer.parseInt(cols[5]), curRes);
+                this.log.add(curEvent);
             }
         } catch (IOException e) {
             System.out.println("read log file error");
@@ -139,7 +150,7 @@ public class ReservationSys {
 
     // will cover original if file name is the same
     public void record() {
-//        Date date = new Date();
+        // Date date = new Date();
         // record timeTable
         // as a format of
         // 1,2,3
@@ -266,33 +277,46 @@ public class ReservationSys {
 
         // keep track of reserved flights in dict, mapping flight number to count
         HashMap<Integer, Integer> ReservedFlights = new HashMap<>();
-        // mapping flight number to latest event record
-        HashMap<Integer, EventRecord> flightsToReserv = new HashMap<>();
+//        // mapping flight number to latest event record
+//        HashMap<Integer, EventRecord> flightsToReserv = new HashMap<>();
 
         for (int i = 0; i < this.dict.size(); i++) {
-            // reserved flights provided in local dictionary
+            // reserved flights for each reservation provided in local dictionary
             ArrayList<Integer> curLocalReservedFlights = this.dict.get(i).getFlights();
             for (int j = 0; j < curLocalReservedFlights.size(); j++) {
                 Integer curFlight = curLocalReservedFlights.get(j);
 
-                // map current reserved flight number to reservation
-                EventRecord curLatestRecord = null;
-                Collections.sort(this.log);
-                for (int p = this.log.size() - 1; p >= 0; p--) {
-                    ArrayList<Integer> curFlights = log.get(p).getReservation().getFlights();
-                    if (curFlights.contains(curFlight)) curLatestRecord = this.log.get(i);
-                }
-                flightsToReserv.put(curFlight, curLatestRecord);
+//                // map current reserved flight number to reservation
+//                EventRecord curLatestRecord = null;
+//                Collections.sort(this.log);
+//                for (int p = this.log.size() - 1; p >= 0; p--) {
+//                    ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
+//                    if (curFlights.contains(curFlight)) {
+//                        curLatestRecord = this.log.get(p);
+//                        break;
+//                    }
+//                }
+//                flightsToReserv.put(curFlight, curLatestRecord);
 
-                // current flight counts in dictionary
-                Integer curCnt = ReservedFlights.get(curLocalReservedFlights.get(j));
+                // update current flight counts in dictionary
+                Integer curCnt = ReservedFlights.get(curFlight); // current flight counts in dictionary
                 ReservedFlights.put(curFlight, (curCnt == null) ? 1 : curCnt + 1);
             }
         }
 
         for (int i = 0; i < flights.size(); i++) {
-            if (ReservedFlights.get(flights.get(i)) == 2) {
-                conflictRecord.add(flightsToReserv.get(flights.get(i)));
+            if (!ReservedFlights.isEmpty() && ReservedFlights.get(flights.get(i)) != null) {
+                if (ReservedFlights.get(flights.get(i)) == 2) {
+                    // find the latest event record for the conflicted flight
+                    Collections.sort(this.log);
+                    for (int p = this.log.size() - 1; p >= 0; p--) {
+                        ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
+                        if (curFlights.contains(flights.get(i))) {
+                            conflictRecord.add(this.log.get(p));
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -310,7 +334,13 @@ public class ReservationSys {
 
         // 2. detect conflict
         if (!isConflict(flights).isEmpty()) {
-            System.out.println("Cannot schedule reservation for " + clientName);
+            System.out.println("Cannot schedule reservation for " + clientName + " because of conflict");
+
+            System.out.println("conflicted event records are: ");
+            ArrayList<EventRecord> conflicts = isConflict(flights);
+            for (int i = 0; i < conflicts.size(); i++) {
+                System.out.println(conflicts.get(i).flatten());
+            }
             return false;
         }
 
@@ -423,7 +453,7 @@ public class ReservationSys {
                 }
                 // delete new record
                 // FIXME
-                else if (conflictsRecords.size() >= 2 && conflictsRecords.get(1) == NE.get(i)) {
+                else if (conflictsRecords.size() >= 2 && conflictsRecords.get(0) != NE.get(i)) {
                     this.siteTimeStamp += 1;
                     EventRecord deleteCurRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
                     this.log.add(deleteCurRec);

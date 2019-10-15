@@ -15,7 +15,7 @@ import java.util.Scanner;
 public class Host {
     public static void main(String[] args) throws IOException {
         // current site
-        String curSiteId = args[1];
+        String curSiteId = args[0];
         String curStartPort = "";
         String curEndPort = "";
         String curIp = "";
@@ -134,7 +134,9 @@ public class Host {
 
             } else if (input[0].equals("cancel")) {
                 // delete from my site's dictionary, update log and timetable
-                mySite.delete(input);
+                if (!mySite.delete(input)) {
+                    System.out.println("Cancel Error");
+                }
 
             } else if (input[0].equals("view")) {// Print dictionary here
                 mySite.printDictionary();

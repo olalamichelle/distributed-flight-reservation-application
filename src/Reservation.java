@@ -12,6 +12,27 @@ public class Reservation {
         this.flights = flights;
     }
 
+    /**
+     * flatten object into the format of: "clientName flightsNumber status"
+     */
+    public String flatten() {
+        StringBuilder builder = new StringBuilder();
+        // clientName
+        builder.append(this.clientName);
+        builder.append(" ");
+        // flights
+        for (int i = 0; i < this.flights.size(); i++) {
+            builder.append(this.flights.get(i));
+            if (i < this.flights.size() - 1) builder.append(",");
+        }
+        builder.append(" ");
+        // status
+        builder.append(this.status);
+        builder.append(" ");
+
+        return builder.toString();
+    }
+
     public String getClientName() {
         return clientName;
     }

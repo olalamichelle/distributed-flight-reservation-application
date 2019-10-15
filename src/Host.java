@@ -2,10 +2,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -100,8 +97,14 @@ public class Host {
         // Construct current site
         ReservationSys mySite = new ReservationSys(sitesInfo, siteNum, curSiteId);
 
-        // TODO: Crash and recover here
-
+        // FIXME: separate directory and project structure
+        // Restore when site crashes
+        File timeFile = new File("timeTable.txt");
+        File dictFile = new File("dictionary.txt");
+        File logFile = new File("log.txt");
+        if (timeFile.exists() && dictFile.exists() && logFile.exists()) {
+            mySite.recover(siteNum);
+        }
 
         // Start port is for listening
         // End port is for send
@@ -124,14 +127,14 @@ public class Host {
             System.out.println("User input: " + commandLine);
             String[] input = commandLine.split("\\s+");
 
+            // FIXME: cancel or delete? reserve or insert?
             if (input[0].equals("reserve")) {
-                String client = input[1];
-                String[] flights = input[2].split(",");
-                // TODO: Reserve
+                // insert into my site, update timetable, log and dictionary
+                mySite.insert(input);
 
             } else if (input[0].equals("cancel")) {
-                String client = input[1];
-                // TODO: Cancel
+                // delete from my site's dictionary, update log and timetable
+                mySite.delete(input);
 
             } else if (input[0].equals("view")) {// Print dictionary here
                 mySite.printDictionary();
@@ -174,11 +177,16 @@ public class Host {
         }
     }
 
-    // TODO
-    // Identify the the necessary partial log for sending to each target site
     public static CommunicateInfo buildMsg(ReservationSys mySite, String targetSite, ArrayList<HashMap<String, String>> sitesInfo) {
-        // TODO: check what is target site knows about the other sites and truncate the log
-        CommunicateInfo res = new CommunicateInfo();
+        // Identify the the necessary partial log for sending to each target site
+        ArrayList<EventRecord> recordsToSend = new ArrayList<>();
+        for (int i = 0; i < mySite.getLog().size(); i++) {
+            EventRecord curRecord = mySite.getLog().get(i);
+            if (!mySite.hasRec(curRecord, targetSite)) {
+                recordsToSend.add(curRecord);
+            }
+        }
+        CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable());
 
         return res;
     }

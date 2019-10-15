@@ -1,9 +1,9 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class ReservationSys {
+    // MEMBER VARIABLES
     // need to backup for site recovery
     private ArrayList<Reservation> dict; // array of reservation object
     private ArrayList<EventRecord> log; // array of eventRecord object
@@ -24,6 +24,177 @@ public class ReservationSys {
         this.siteTimeStamp = 0;
         this.siteId = siteId;
         this.sitesInfo = sitesInfo;
+    }
+
+    // GETTER and SETTERS
+    public ArrayList<Reservation> getDict() {
+        return dict;
+    }
+
+    public void setDict(ArrayList<Reservation> dict) {
+        this.dict = dict;
+    }
+
+    public ArrayList<EventRecord> getLog() {
+        return log;
+    }
+
+    public void setLog(ArrayList<EventRecord> log) {
+        this.log = log;
+    }
+
+    public Integer[][] getTimeTable() {
+        return timeTable;
+    }
+
+    public void setTimeTable(Integer[][] timeTable) {
+        this.timeTable = timeTable;
+    }
+
+    public Integer getSiteTimeStamp() {
+        return siteTimeStamp;
+    }
+
+    public void setSiteTimeStamp(Integer siteTimeStamp) {
+        this.siteTimeStamp = siteTimeStamp;
+    }
+
+    public String getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(String siteId) {
+        this.siteId = siteId;
+    }
+
+    public ArrayList<HashMap<String, String>> getSitesInfo() {
+        return sitesInfo;
+    }
+
+    public void setSitesInfo(ArrayList<HashMap<String, String>> sitesInfo) {
+        this.sitesInfo = sitesInfo;
+    }
+
+    // HELPER FUNCTIONS
+    public void recover(Integer siteNum) {
+        // recover time table
+        try {
+            this.timeTable = new Integer[siteNum][siteNum];
+            BufferedReader timeReader = new BufferedReader(new FileReader("timeTable.txt"));
+            String line = "";
+            int row = 0;
+            while((line = timeReader.readLine()) != null) {
+                String[] cols = line.split(",");
+                int col = 0;
+                for(String  c : cols) {
+                    this.timeTable[row][col] = Integer.parseInt(c);
+                    col++;
+                }
+                row++;
+            }
+            timeReader.close();
+        } catch (IOException e) {
+            System.out.println("read time table file error");
+        }
+
+        // recover dictionary
+        try {
+            this.dict = new ArrayList<Reservation>();
+            BufferedReader dictReader = new BufferedReader(new FileReader("dictionary.txt"));
+            String line = "";
+            while ((line = dictReader.readLine()) != null) {
+                String[] cols = line.split(" ");
+                String[] curFlights = cols[1].split(",");
+                ArrayList<Integer> flights = new ArrayList<>();
+                for (int i = 0; i < curFlights.length; i++) {
+                    flights.add(Integer.parseInt(curFlights[i]));
+                }
+                Reservation curRes = new Reservation(cols[0], cols[2], flights);
+                this.dict.add(curRes);
+            }
+
+        } catch (IOException e) {
+            System.out.println("read dictionary file error");
+        }
+
+        // recover log
+        try {
+            this.log = new ArrayList<EventRecord>();
+            BufferedReader logReader = new BufferedReader(new FileReader("log.txt"));
+            String line = "";
+            while ((line = logReader.readLine()) != null) {
+                String[] cols = line.split(" ");
+                String[] curFlights = cols[1].split(",");
+                ArrayList<Integer> flights = new ArrayList<>();
+                for (int i = 0; i < curFlights.length; i++) {
+                    flights.add(Integer.parseInt(curFlights[i]));
+                }
+                Reservation curRes = new Reservation(cols[0], cols[2], flights);
+                EventRecord curEvent = new EventRecord(cols[3], cols[4], Integer.parseInt(cols[5]), curRes);
+            }
+        } catch (IOException e) {
+            System.out.println("read log file error");
+        }
+    }
+
+    // will cover original if file name is the same
+    public void record() {
+//        Date date = new Date();
+        // record timeTable
+        // as a format of
+        // 1,2,3
+        // 4,5,6
+        StringBuilder tableBuilder = new StringBuilder();
+        for (int i = 0; i < this.timeTable.length; i++) {
+            for (int j = 0; j < this.timeTable.length; j++) {
+                tableBuilder.append(this.timeTable[i][j]);
+                if(j < this.timeTable.length - 1) {
+                    tableBuilder.append(",");
+                }
+            }
+            tableBuilder.append("\n");
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("timeTable.txt"));
+            writer.write(tableBuilder.toString());
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("write exception");
+        }
+
+        // record dictionary
+        // as a format of
+        // clientName1 1,2,3 status1
+        // clientName2 4,5,6 status2
+        StringBuilder dictBuilder = new StringBuilder();
+        for (int i = 0; i < this.dict.size(); i++) {
+            dictBuilder.append(dict.get(i).flatten());
+            dictBuilder.append("\n");
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("dictionary.txt"));
+            writer.write(dictBuilder.toString());
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("write exception");
+        }
+
+        // record log
+        // as a format of
+        // clientName1 1,2,3 status1 operation siteId siteTimestamp
+        // clientName2 4,5,6 status2 operation siteId siteTimestamp
+        StringBuilder logBuilder = new StringBuilder();
+        for (int i = 0; i < this.log.size(); i++) {
+            logBuilder.append(this.log.get(i).flatten());
+            logBuilder.append("\n");
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("log.txt"));
+            writer.write(logBuilder.toString());
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("write exception");
+        }
     }
 
     /**
@@ -131,9 +302,9 @@ public class ReservationSys {
 
     public boolean insert(String[] orderInfo) {
         // 1. resolve information in order
-        String clientName = orderInfo[0];
+        String clientName = orderInfo[1];
         ArrayList<Integer> flights = new ArrayList<>();
-        for (String s : orderInfo[1].split(",")) {
+        for (String s : orderInfo[2].split(",")) {
             flights.add(Integer.parseInt(s));
         }
 
@@ -156,11 +327,13 @@ public class ReservationSys {
         this.timeTable[curSiteIdx][curSiteIdx] = this.siteTimeStamp;
 
         System.out.println("Reservation submitted for " + clientName);
+        // backup for site recovery
+        this.record();
         return true;
     }
 
     public boolean delete(String[] orderInfo) {
-        String clientName = orderInfo[0];
+        String clientName = orderInfo[1];
 
         // 1. find the reservation in dictionary
         Reservation targetReserv = null;
@@ -183,6 +356,8 @@ public class ReservationSys {
         this.timeTable[curSiteIdx][curSiteIdx] = this.siteTimeStamp;
 
         System.out.println("Reservation of client" + clientName + " cancelled.");
+        // backup for site recovery
+        this.record();
         return true;
     }
 
@@ -300,6 +475,9 @@ public class ReservationSys {
                 log.remove(curRec);
             }
         }
+
+        // backup for site recovery
+        this.record();
     }
 
     public void printLog() {//private ArrayList<EventRecord> log;

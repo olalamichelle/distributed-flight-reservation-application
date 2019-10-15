@@ -12,6 +12,24 @@ public class EventRecord implements Comparable<EventRecord> {
     }
 
     /**
+     * flatten object into a format of: "clientName flightsNumber status operation siteId siteTimestamp"
+     */
+    public String flatten() {
+        StringBuilder builder = new StringBuilder();
+        // reservation
+        builder.append(this.reservation.flatten());
+        // operation
+        builder.append(this.operation);
+        builder.append(" ");
+        // siteId
+        builder.append(this.siteId);
+        builder.append(" ");
+        // siteTimestamp
+        builder.append(this.siteTimestamp);
+        return builder.toString();
+    }
+
+    /**
      * helper function to sort event record by its timestamp and client name
      * @param r
      * @return

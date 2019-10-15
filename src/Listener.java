@@ -17,14 +17,14 @@ public class Listener extends Thread {
 
     public Listener(DatagramSocket updSocket,  ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) {
         this.socket = updSocket;
-        running = false;
+        this.running = false;
     }
 
     public void run(ArrayList<HashMap<String, String>> sitesInfo, ReservationSys mySite) throws IOException, ClassNotFoundException {
-        running = true;
+        this.running = true;
         DatagramPacket packet = null;
-        while (running) {
-            packet = new DatagramPacket(buffer, buffer.length);
+        while (this.running) {
+            packet = new DatagramPacket(this.buffer, this.buffer.length);
             try {
                 socket.receive(packet);// blocks until a msg arrives
             } catch (IOException e) {
@@ -44,7 +44,7 @@ public class Listener extends Thread {
             mySite.update((CommunicateInfo) deserialize(packet.getData()), senderId);
             // TODO: send received confirmation?
 
-            buffer = new byte[65535];//reset
+            this.buffer = new byte[65535];//reset
         }
         socket.close();
     }

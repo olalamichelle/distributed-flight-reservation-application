@@ -102,6 +102,11 @@ public class ReservationSys {
                 }
                 row++;
             }
+
+            // update site's timestamp
+            Integer siteIdx = siteIdToIdx(this.siteId);
+            this.siteTimeStamp = this.timeTable[siteIdx][siteIdx];
+
             timeReader.close();
         } catch (IOException e) {
             System.out.println("read time table file error");

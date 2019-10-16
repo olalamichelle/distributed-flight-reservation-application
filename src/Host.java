@@ -81,7 +81,7 @@ public class Host {
         }
 
         // ---------test---------//
-        String id = "gamma";
+        String id = "alpha";
         System.out.println("current site is: " + id);
 
         // find current site info

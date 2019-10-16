@@ -1,4 +1,7 @@
-public class EventRecord implements Comparable<EventRecord> {
+import java.io.Serializable;
+
+public class EventRecord implements Comparable<EventRecord>, Serializable {
+    private static final long serialVersionUID = 2946811424018097277L;
     private Reservation reservation;
     private String operation;
     private String siteId;

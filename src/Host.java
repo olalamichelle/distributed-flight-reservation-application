@@ -81,7 +81,7 @@ public class Host {
         }
 
         // ---------test---------//
-        String id = "alpha";
+        String id = "cherry";
         System.out.println("current site is: " + id);
 
         // find current site info
@@ -196,7 +196,13 @@ public class Host {
                 recordsToSend.add(curRecord);
             }
         }
+
         CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable());
+
+        System.out.println("now build msg to send: ");
+        for (int i = 0; i < res.getEventRecords().size(); i++) {
+            System.out.println(res.getEventRecords().get(i).flatten());
+        }
 
         return res;
     }

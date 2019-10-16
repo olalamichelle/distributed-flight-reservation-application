@@ -399,6 +399,13 @@ public class ReservationSys {
     public void update(CommunicateInfo recInfo, String senderId) {
         // 1. resolve received information
         ArrayList<EventRecord> recEventRecords = recInfo.getEventRecords();
+
+        System.out.println("now received event record is: ");
+        System.out.println("size is: " + recEventRecords.size());
+        for (int i = 0; i < recEventRecords.size(); i++) {
+            System.out.println(recEventRecords.get(i).flatten());
+        }
+
         Integer siteNum = this.sitesInfo.size();
         Integer[][] recTimeTable = recInfo.getTimeTable();
 
@@ -462,6 +469,7 @@ public class ReservationSys {
                     this.siteTimeStamp += 1;
                     EventRecord deleteCurRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
                     this.log.add(deleteCurRec);
+                    this.dict.remove(NE.get(i).getReservation());
                     this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
 
                     System.out.println("Reservation record for: " + NE.get(i).getReservation().getClientName() + " canceled.");
@@ -478,21 +486,23 @@ public class ReservationSys {
 
                     System.out.println("Reservation record for: " + conflictsRecords.get(1).getReservation().getClientName() + " canceled.");
                 }
+            }
+        }
 
-                // status change
-                EventRecord targetRecord = conflictsRecords.get(0);
-                Integer targetColumn = siteIdToIdx(targetRecord.getSiteId());
-                Integer targetTimestamp = targetRecord.getSiteTimestamp();
-                int row = 0;
-                for (; row < siteNum; row++) {
-                    if (this.timeTable[row][targetColumn] < targetTimestamp) break;
-                }
-                // when all other sites know about this event, change status to confirmed
-                if (row == siteNum) {
-                    for (int j = 0; j < this.dict.size(); j++) {
-                        if (this.dict.get(j).equals(targetRecord.getReservation())) {
-                            dict.get(j).setStatus("confirmed");
-                        }
+        // status change
+        for (int i = 0; i < this.log.size(); i++) {
+            EventRecord targetRecord = this.log.get(i);
+            Integer targetColumn = siteIdToIdx(targetRecord.getSiteId());
+            Integer targetTimestamp = targetRecord.getSiteTimestamp();
+            int row = 0;
+            for (; row < siteNum; row++) {
+                if (this.timeTable[row][targetColumn] < targetTimestamp) break;
+            }
+            // when all other sites know about this event, change status to confirmed
+            if (row == siteNum) {
+                for (int j = 0; j < this.dict.size(); j++) {
+                    if (this.dict.get(j).equals(targetRecord.getReservation())) {
+                        dict.get(j).setStatus("confirmed");
                     }
                 }
             }

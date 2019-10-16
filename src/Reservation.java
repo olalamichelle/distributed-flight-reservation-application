@@ -1,6 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Reservation {
+public class Reservation implements Serializable {
+    private static final long serialVersionUID = 420752690109126838L;
     private String clientName;
     private ArrayList<Integer> flights;
     private String status;

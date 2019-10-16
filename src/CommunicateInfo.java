@@ -7,7 +7,7 @@ public class CommunicateInfo implements Serializable {
     private Integer timeTable[][];
 
     public CommunicateInfo(ArrayList<EventRecord> sendEventRecords, Integer[][] timeTable) {
-        this.eventRecords = eventRecords;
+        this.eventRecords = sendEventRecords;
         this.timeTable = timeTable;
     }
 

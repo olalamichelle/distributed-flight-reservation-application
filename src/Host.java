@@ -118,15 +118,13 @@ public class Host {
         // Start port is for listening
         // End port is for sending
         // Create receive socket by start port number
-        DatagramSocket receiveSocket = new DatagramSocket(null);
-        InetSocketAddress receiveAddress = new InetSocketAddress(curIp, Integer.parseInt(curStartPort));
-        receiveSocket.bind(receiveAddress);
+        DatagramSocket receiveSocket = new DatagramSocket(Integer.parseInt(curStartPort));
+//        InetSocketAddress receiveAddress = new InetSocketAddress(curIp, Integer.parseInt(curStartPort));
         new Listener(receiveSocket, sitesInfo, mySite).start();// child thread go here
 
         // Create send socket by end port number
-        DatagramSocket sendSocket = new DatagramSocket(null);
-        InetSocketAddress sendAddress = new InetSocketAddress(curIp, Integer.parseInt(curEndPort));
-        sendSocket.bind(sendAddress);
+        DatagramSocket sendSocket = new DatagramSocket(Integer.parseInt(curEndPort));
+//        InetSocketAddress sendAddress = new InetSocketAddress(curIp, Integer.parseInt(curEndPort));
 
         // main thread keeps receiving msgs from user at this site
         while (true) {
@@ -232,6 +230,7 @@ public class Host {
                 }
             }
             InetAddress targetIP = InetAddress.getByName(ipAddress);
+//            InetAddress targetIP = InetAddress.getLocalHost().getHostAddress();
             byte[] sendArray = serialize(buildMsg(mySite, recipients.get(i), sitesInfo));
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);

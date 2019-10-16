@@ -81,7 +81,7 @@ public class Host {
         }
 
         // ---------test---------//
-        String id = "alpha";
+        String id = "gamma";
         System.out.println("current site is: " + id);
 
         // find current site info
@@ -118,9 +118,10 @@ public class Host {
         // Start port is for listening
         // End port is for sending
         // Create receive socket by start port number
-        DatagramSocket receiveSocket = new DatagramSocket(Integer.parseInt(curStartPort));
-//        InetSocketAddress receiveAddress = new InetSocketAddress(curIp, Integer.parseInt(curStartPort));
+        Integer receivePort = Integer.parseInt(curStartPort);
+        DatagramSocket receiveSocket = new DatagramSocket(receivePort);
         new Listener(receiveSocket, sitesInfo, mySite).start();// child thread go here
+
 
         // Create send socket by end port number
         DatagramSocket sendSocket = new DatagramSocket(Integer.parseInt(curEndPort));

@@ -3,6 +3,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,9 +12,9 @@ import java.util.HashMap;
 
 public class Test {
 
-    public static void main(String[] args) {
-
-
+    public static void main(String[] args) throws SocketException {
+        DatagramSocket receiveSocket = new DatagramSocket(15003);
+        new UDPClient(receiveSocket).start();
         // TEST1: read host name and port number from json
 //        try {
 //

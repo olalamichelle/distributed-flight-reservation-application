@@ -82,7 +82,7 @@ public class Host {
 
         // ---------test---------//
         String id = "cherry";
-        System.out.println("current site is: " + id);
+        System.out.println("[test] current site is: " + id);
 
         // find current site info
         String curSiteId = "";
@@ -132,7 +132,7 @@ public class Host {
             System.out.println("Please enter the command: ");
             Scanner in = new Scanner(System.in);
             String commandLine = in.nextLine();
-            System.out.println("User input: " + commandLine);
+            System.out.println("[test] User input: " + commandLine);
             String[] input = commandLine.split("\\s+");
 
             // FIXME: cancel or delete? reserve or insert?
@@ -199,9 +199,9 @@ public class Host {
 
         CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable());
 
-        System.out.println("now build msg to send: ");
+        System.out.println("[test] now build msg to send: ");
         for (int i = 0; i < res.getEventRecords().size(); i++) {
-            System.out.println(res.getEventRecords().get(i).flatten());
+            System.out.println("[test] " + res.getEventRecords().get(i).flatten());
         }
 
         return res;
@@ -242,7 +242,7 @@ public class Host {
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);
 
-            System.out.println("successfully sent to " + recipients.get(i));
+            System.out.println("[test] successfully sent to " + recipients.get(i));
         }
     }
 

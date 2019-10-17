@@ -43,11 +43,10 @@ public class Listener extends Thread {
                 if (this.sitesInfo.get(i).get("ip").equals(senderIp) &&
                         !this.sitesInfo.get(i).get("siteId").equals(this.mySite.getSiteId())) {
                     senderId = this.sitesInfo.get(i).get("siteId");
-                    System.out.println("Got something from site " + senderId);
+                    System.out.println("[test] Got something from site " + senderId);
                     break;
                 }
             }
-            System.out.println("successfully received from " + senderId);
 
             // Update the current site based on the received information
             try {

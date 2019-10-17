@@ -517,6 +517,8 @@ public class ReservationSys {
             }
             // to delete
             if (flag == 0) {
+                System.out.println("[test] now truncating log for event record: " + curRec.flatten());
+
                 log.remove(curRec);
             }
         }

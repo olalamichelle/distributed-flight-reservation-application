@@ -1,0 +1,2 @@
+b 1 pending insert banana 1
+c 2 pending insert cherry 1

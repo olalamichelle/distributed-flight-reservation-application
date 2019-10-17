@@ -6,9 +6,23 @@ public class CommunicateInfo implements Serializable {
     private ArrayList<EventRecord> eventRecords;
     private Integer timeTable[][];
 
-    public CommunicateInfo(ArrayList<EventRecord> sendEventRecords, Integer[][] timeTable) {
+    //-------test----------//
+    // FIXME
+    private String senderId;
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
+    // FIXME: delete senderId
+    public CommunicateInfo(ArrayList<EventRecord> sendEventRecords, Integer[][] timeTable, String senderId) {
         this.eventRecords = sendEventRecords;
         this.timeTable = timeTable;
+        this.senderId = senderId;
     }
 
     public ArrayList<EventRecord> getEventRecords() {

@@ -197,11 +197,12 @@ public class Host {
             }
         }
 
-        CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable());
+        // FIXME: delete siteId
+        CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable(), mySite.getSiteId());
 
-        System.out.println("now build msg to send: ");
+        System.out.println("[test] now build msg to send: ");
         for (int i = 0; i < res.getEventRecords().size(); i++) {
-            System.out.println(res.getEventRecords().get(i).flatten());
+            System.out.println("[test] " + res.getEventRecords().get(i).flatten());
         }
 
         return res;

@@ -24,7 +24,7 @@ public class Host {
         try {
 
             JSONParser parser = new JSONParser();
-            JSONObject data = (JSONObject) parser.parse(new FileReader("src/knownhosts.json"));
+            JSONObject data = (JSONObject) parser.parse(new FileReader("./knownhosts.json"));
             JSONObject hosts = (JSONObject) data.get("hosts");
 
             ArrayList<String> allSiteId = new ArrayList<>();
@@ -81,7 +81,7 @@ public class Host {
         }
 
         // ---------test---------//
-        String id = "cherry";
+        String id = args[0];
         System.out.println("[test] current site is: " + id);
 
         // find current site info

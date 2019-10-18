@@ -486,7 +486,7 @@ public class ReservationSys {
                     // no conflict
                     if (conflictsRecords.size() == 0) break;
                     // there is conflict
-                    for (int j = conflictsRecords.size() - 1; j >= conflictsRecords.size(); j--) {
+                    for (int j = conflictsRecords.size() - 1; j >= 2; j--) {
                         // when new record is to delete
                         if (conflictsRecords.get(j) == NE.get(i)) delNew = true;
                     }

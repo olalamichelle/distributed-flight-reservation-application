@@ -274,10 +274,10 @@ public class ReservationSys {
     /**
      * given a certain event record,
      * find out whether this event is conflicted with local event records in dictionary
-     * @param flights flights in denoted event record
+     * @param flight flights in denoted event record
      * @return a list of event records that are conflicted with denoted event record
      */
-    public ArrayList<EventRecord> isConflict(ArrayList<Integer> flights) {
+    public ArrayList<EventRecord> isConflict(Integer flight) {
         ArrayList<EventRecord> conflictRecord = new ArrayList<>(); // to store conflicted event record in local dict
 
         // keep track of reserved flights in dict, mapping flight number to count
@@ -309,19 +309,17 @@ public class ReservationSys {
             }
         }
 
-        for (int i = 0; i < flights.size(); i++) {
-            if (!ReservedFlights.isEmpty() && ReservedFlights.get(flights.get(i)) != null) {
-                if (ReservedFlights.get(flights.get(i)) == 2) {
+            if (!ReservedFlights.isEmpty() && ReservedFlights.get(flight) != null) {
+                if (ReservedFlights.get(flight) == 2) {
                     // find all event record for the conflicted flight
                     for (int p = 0; p < this.log.size(); p++) {
                         ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
-                        if (curFlights.contains(flights.get(i)) && this.log.get(p).getOperation().equals("insert")) {
+                        if (curFlights.contains(flight) && this.log.get(p).getOperation().equals("insert")) {
                             conflictRecord.add(this.log.get(p));
                         }
                     }
                 }
             }
-        }
 
         Collections.sort(conflictRecord);
 
@@ -343,15 +341,18 @@ public class ReservationSys {
         }
 
         // 2. detect conflict
-        if (!isConflict(flights).isEmpty()) {
-            System.out.println("<Reserve Error> Cannot schedule reservation for " + clientName + " because of conflict");
+        for (int i = 0; i < flights.size(); i++) {
+            if (!isConflict(flights.get(i)).isEmpty()) {
+                System.out.println("<Reserve Error> Cannot schedule reservation for " + clientName + " because of conflict");
 
-            System.out.println("[test] conflicted event records are: ");
-            ArrayList<EventRecord> conflicts = isConflict(flights);
-            for (int i = 0; i < conflicts.size(); i++) {
-                System.out.println("[test] " + conflicts.get(i).flatten());
+                System.out.println("[test] part of the conflicted event records are: ");
+                ArrayList<EventRecord> conflicts = isConflict(flights.get(i));
+                for (int j = 0; j < conflicts.size(); j++) {
+                    System.out.println("[test] " + conflicts.get(j).flatten());
+                }
+
+                return false;
             }
-            return false;
         }
 
         // 3. create Reservation object and EventRecord object
@@ -469,41 +470,53 @@ public class ReservationSys {
                 }
                 if (deletedLater == 1) continue;
 
-                // detect conflicts
-                ArrayList<EventRecord> conflictsRecords = new ArrayList<>(); // store all the conflicted records
-                conflictsRecords = isConflict(NE.get(i).getReservation().getFlights());
-//                conflictsRecords.add(NE.get(i)); // add also new record into conflict records
-                Collections.sort(conflictsRecords); // sort conflict records by timestamp and client name
+                boolean delNew = false; // to indicate whether to delete the new record
+                // loop through all the flight number in new record to detect conflicts
+                for (int p = 0; p < NE.get(i).getReservation().getFlights().size(); p++) {
+                    ArrayList<EventRecord> conflictsRecords = new ArrayList<>(); // store all the conflicted records
+                    conflictsRecords = isConflict(NE.get(i).getReservation().getFlights().get(p));
+                    Collections.sort(conflictsRecords); // sort conflict records by timestamp and client name
 
-                System.out.println("???????altogether " + conflictsRecords.size() + " conflicted events");
-                System.out.println("!!!!!!!now conflicted records are");
-                for (int j = 0; j < conflictsRecords.size(); j++) {
-                    System.out.println(conflictsRecords.get(j).getReservation().flatten());
+//                    System.out.println("???????altogether " + conflictsRecords.size() + " conflicted events");
+//                    System.out.println("!!!!!!!now conflicted records are");
+//                    for (int j = 0; j < conflictsRecords.size(); j++) {
+//                        System.out.println(conflictsRecords.get(j).getReservation().flatten());
+//                    }
+                    // no conflict
+                    if (conflictsRecords.size() == 0) break;
+                    // there is conflict
+                    for (int j = conflictsRecords.size() - 1; j >= conflictsRecords.size(); j--) {
+                        // when new record is to delete
+                        if (conflictsRecords.get(j) == NE.get(i)) delNew = true;
+                    }
                 }
 
-                // no conflict
-                if (conflictsRecords.size() == 0) {
-                    this.dict.add(NE.get(i).getReservation());
+                // when new record should be deleted
+                if (delNew) {
+                    this.siteTimeStamp += 1;
+                    EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
+                    this.log.add(recToDelete);
+                    this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
                 }
-                // delete new record
-                // FIXME
+                // when new record should be kept, delete all conflicted records
                 else {
                     this.siteTimeStamp += 1;
-                    // delete the last one conflicted record in dictionary
-                    for (int j = conflictsRecords.size() - 1; j >= conflictsRecords.size() - 1; j--) {
-                        EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(j).getReservation());
-                        this.log.add(recToDelete);
-                        this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
-                        this.dict.remove(recToDelete.getReservation());
+                    // add new record into dictionary
+                    this.dict.add(NE.get(i).getReservation());
 
-                        System.out.println("<Update Cancel> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " canceled.");
-                    }
+                    for (int p = 0; p < NE.get(i).getReservation().getFlights().size(); p++) {
+                        ArrayList<EventRecord> conflictsRecords = new ArrayList<>(); // store all the conflicted records
+                        conflictsRecords = isConflict(NE.get(i).getReservation().getFlights().get(p));
+                        Collections.sort(conflictsRecords); // sort conflict records by timestamp and client name
 
-                    // add new record to dictionary, if new record is not to delete
-                    for (int j = 0; j < conflictsRecords.size() - 1; j++) {
-                        if (this.dict.contains(conflictsRecords.get(j).getReservation())) continue;
-                        this.dict.add(conflictsRecords.get(j).getReservation());
-                        System.out.println("<Update Reserve> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " added into dict.");
+                        for (int j = conflictsRecords.size() - 1; j >= conflictsRecords.size(); j--) {
+                            EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(j).getReservation());
+                            this.log.add(recToDelete);
+                            this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
+                            this.dict.remove(recToDelete.getReservation());
+
+                            System.out.println("<Update Cancel> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " canceled.");
+                        }
                     }
                 }
 //                else if (conflictsRecords.get(0) != NE.get(i)) {
@@ -528,7 +541,7 @@ public class ReservationSys {
 //
 //
 //                    System.out.println("<Update Cancel(local)> Reservation record for: " + conflictsRecords.get(1).getReservation().getClientName() + " canceled.");
-//                }
+//
             }
         }
 

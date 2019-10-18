@@ -1,3 +1,2 @@
+a 1 pending 
 b 1 pending 
-a 1 confirmed 
-c 2 pending 

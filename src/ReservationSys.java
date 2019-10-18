@@ -313,11 +313,13 @@ public class ReservationSys {
             if (!ReservedFlights.isEmpty() && ReservedFlights.get(flights.get(i)) != null) {
                 if (ReservedFlights.get(flights.get(i)) == 2) {
                     // find the latest event record for the conflicted flight
-                    Collections.sort(this.log);
-                    for (int p = this.log.size() - 1; p >= 0; p--) {
-                        ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
+                    ArrayList<EventRecord> logCpy = new ArrayList<>();
+                    Collections.copy(logCpy, this.log); // copy log and sort copy
+                    Collections.sort(logCpy);
+                    for (int p = logCpy.size() - 1; p >= 0; p--) {
+                        ArrayList<Integer> curFlights = logCpy.get(p).getReservation().getFlights();
                         if (curFlights.contains(flights.get(i))) {
-                            conflictRecord.add(this.log.get(p));
+                            conflictRecord.add(logCpy.get(p));
                             break;
                         }
                     }
@@ -459,6 +461,13 @@ public class ReservationSys {
                 conflictsRecords = isConflict(NE.get(i).getReservation().getFlights());
                 conflictsRecords.add(NE.get(i)); // add also new record into conflict records
                 Collections.sort(conflictsRecords); // sort conflict records by timestamp and client name
+
+                System.out.println("!!!!!!!!!!!!!!!!");
+                System.out.println("conflict size is: " + conflictsRecords.size());
+                for (int j = 0; j < conflictsRecords.size(); j++) {
+                    System.out.println(conflictsRecords.get(j).getReservation().flatten());
+                }
+
                 // no conflict
                 if (conflictsRecords.size() == 1) {
                     this.dict.add(NE.get(i).getReservation());
@@ -466,6 +475,10 @@ public class ReservationSys {
                 // delete new record
                 // FIXME
                 else if (conflictsRecords.size() >= 2 && conflictsRecords.get(0) != NE.get(i)) {
+
+                    System.out.println("hello");
+                    System.out.println("!!!!!!!!" + NE.get(i).getReservation().flatten());
+
                     this.siteTimeStamp += 1;
                     EventRecord deleteCurRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
                     this.log.add(deleteCurRec);
@@ -480,7 +493,10 @@ public class ReservationSys {
                     EventRecord deleteLocalRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(1).getReservation());
                     this.log.add(deleteLocalRec);
                     this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
-                    this.dict.remove(conflictsRecords.get(1).getReservation());
+                    for (int j = 1; j < conflictsRecords.size(); j++) {
+                        this.dict.remove(conflictsRecords.get(j).getReservation());
+                    }
+//                    this.dict.remove(conflictsRecords.get(1).getReservation());
                     this.dict.add(NE.get(i).getReservation());
 
 

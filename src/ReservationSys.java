@@ -309,17 +309,17 @@ public class ReservationSys {
             }
         }
 
-            if (!ReservedFlights.isEmpty() && ReservedFlights.get(flight) != null) {
-                if (ReservedFlights.get(flight) == 2) {
-                    // find all event record for the conflicted flight
-                    for (int p = 0; p < this.log.size(); p++) {
-                        ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
-                        if (curFlights.contains(flight) && this.log.get(p).getOperation().equals("insert")) {
-                            conflictRecord.add(this.log.get(p));
-                        }
+        if (!ReservedFlights.isEmpty() && ReservedFlights.get(flight) != null) {
+            if (ReservedFlights.get(flight) == 2) {
+                // find all event record for the conflicted flight
+                for (int p = 0; p < this.log.size(); p++) {
+                    ArrayList<Integer> curFlights = this.log.get(p).getReservation().getFlights();
+                    if (curFlights.contains(flight) && this.log.get(p).getOperation().equals("insert")) {
+                        conflictRecord.add(this.log.get(p));
                     }
                 }
             }
+        }
 
         Collections.sort(conflictRecord);
 
@@ -482,6 +482,7 @@ public class ReservationSys {
 //                    for (int j = 0; j < conflictsRecords.size(); j++) {
 //                        System.out.println(conflictsRecords.get(j).getReservation().flatten());
 //                    }
+
                     // no conflict
                     if (conflictsRecords.size() == 0) break;
                     // there is conflict
@@ -493,6 +494,9 @@ public class ReservationSys {
 
                 // when new record should be deleted
                 if (delNew) {
+
+                    System.out.println("[test] now new record should be deleted");
+
                     this.siteTimeStamp += 1;
                     EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
                     this.log.add(recToDelete);
@@ -500,16 +504,19 @@ public class ReservationSys {
                 }
                 // when new record should be kept, delete all conflicted records
                 else {
-                    this.siteTimeStamp += 1;
-                    // add new record into dictionary
-                    this.dict.add(NE.get(i).getReservation());
 
+                    System.out.println("[test] now local record should be deleted");
+
+                    this.siteTimeStamp += 1;
                     for (int p = 0; p < NE.get(i).getReservation().getFlights().size(); p++) {
                         ArrayList<EventRecord> conflictsRecords = new ArrayList<>(); // store all the conflicted records
                         conflictsRecords = isConflict(NE.get(i).getReservation().getFlights().get(p));
+                        // no conflicts
+                        if (conflictsRecords.size() == 0) continue;
                         Collections.sort(conflictsRecords); // sort conflict records by timestamp and client name
 
-                        for (int j = conflictsRecords.size() - 1; j >= conflictsRecords.size(); j--) {
+                        // delete the one or more last conflicted records
+                        for (int j = conflictsRecords.size() - 1; j >= 2; j--) {
                             EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(j).getReservation());
                             this.log.add(recToDelete);
                             this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
@@ -518,6 +525,9 @@ public class ReservationSys {
                             System.out.println("<Update Cancel> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " canceled.");
                         }
                     }
+
+                    // add new record into dictionary
+                    this.dict.add(NE.get(i).getReservation());
                 }
 //                else if (conflictsRecords.get(0) != NE.get(i)) {
 //                    this.siteTimeStamp += 1;

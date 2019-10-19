@@ -323,10 +323,10 @@ public class ReservationSys {
 
         Collections.sort(conflictRecord);
 
-        System.out.println(conflictRecord.size() + "???anything wron? but I firstly got ");
-        for (int i = 0; i < conflictRecord.size(); i++) {
-            System.out.println(conflictRecord.get(i).getReservation().flatten());
-        }
+//        System.out.println(conflictRecord.size() + "???anything wron? but I firstly got ");
+//        for (int i = 0; i < conflictRecord.size(); i++) {
+//            System.out.println(conflictRecord.get(i).getReservation().flatten());
+//        }
 
         return conflictRecord;
     }
@@ -343,12 +343,12 @@ public class ReservationSys {
         // 2. detect conflict
         for (int i = 0; i < flights.size(); i++) {
             if (!isConflict(flights.get(i)).isEmpty()) {
-                System.out.println("<Reserve Error> Cannot schedule reservation for " + clientName + " because of conflict");
+                System.out.println("Cannot schedule reservation for " + clientName + " because of conflict");
 
-                System.out.println("[test] part of the conflicted event records are: ");
+//                System.out.println("[test] part of the conflicted event records are: ");
                 ArrayList<EventRecord> conflicts = isConflict(flights.get(i));
                 for (int j = 0; j < conflicts.size(); j++) {
-                    System.out.println("[test] " + conflicts.get(j).flatten());
+//                    System.out.println("[test] " + conflicts.get(j).flatten());
                 }
 
                 return false;
@@ -367,7 +367,7 @@ public class ReservationSys {
         Integer curSiteIdx = siteIdToIdx(this.siteId);
         this.timeTable[curSiteIdx][curSiteIdx] = this.siteTimeStamp;
 
-        System.out.println("<Local Reserve> Reservation submitted for " + clientName);
+        System.out.println("Reservation submitted for " + clientName + ".");
         // backup for site recovery
         this.record();
         return true;
@@ -396,7 +396,7 @@ public class ReservationSys {
         Integer curSiteIdx = siteIdToIdx(this.siteId);
         this.timeTable[curSiteIdx][curSiteIdx] = this.siteTimeStamp;
 
-        System.out.println("<Local Delete> Reservation of client" + clientName + " cancelled.");
+        System.out.println("Reservation of client" + clientName + " cancelled.");
         // backup for site recovery
         this.record();
         return true;
@@ -406,11 +406,11 @@ public class ReservationSys {
         // 1. resolve received information
         ArrayList<EventRecord> recEventRecords = recInfo.getEventRecords();
 
-        System.out.println("[test] now received event record is: ");
-        for (int i = 0; i < recEventRecords.size(); i++) {
-            System.out.println("[test] " + recEventRecords.get(i).flatten());
-        }
-        System.out.println("[test] size is: " + recEventRecords.size());
+//        System.out.println("[test] now received event record is: ");
+//        for (int i = 0; i < recEventRecords.size(); i++) {
+//            System.out.println("[test] " + recEventRecords.get(i).flatten());
+//        }
+//        System.out.println("[test] size is: " + recEventRecords.size());
 
         Integer siteNum = this.sitesInfo.size();
         Integer[][] recTimeTable = recInfo.getTimeTable();
@@ -423,10 +423,10 @@ public class ReservationSys {
             }
         }
 
-        System.out.println("&&&&&&now new records received are");
-        for (int i = 0; i < NE.size(); i++) {
-            System.out.println(NE.get(i).getReservation().flatten());
-        }
+//        System.out.println("&&&&&&now new records received are");
+//        for (int i = 0; i < NE.size(); i++) {
+//            System.out.println(NE.get(i).getReservation().flatten());
+//        }
 
         // 2. update timetable
         Integer curSiteIdx = siteIdToIdx(this.siteId);
@@ -452,9 +452,9 @@ public class ReservationSys {
         // 4. update dictionary for every new record
         for (int i = 0; i < NE.size(); i++) {
 
-            System.out.println("******now dealing with event record " + NE.get(i).getReservation().flatten());
-            System.out.println("******and now dictionary is ");
-            printDictionary();
+//            System.out.println("******now dealing with event record " + NE.get(i).getReservation().flatten());
+//            System.out.println("******and now dictionary is ");
+//            printDictionary();
 
             if (NE.get(i).getOperation().equals("delete")) {
                 this.dict.remove(NE.get(i).getReservation());
@@ -495,7 +495,7 @@ public class ReservationSys {
                 // when new record should be deleted
                 if (delNew) {
 
-                    System.out.println("[test] now new record should be deleted");
+//                    System.out.println("[test] now new record should be deleted");
 
                     this.siteTimeStamp += 1;
                     EventRecord recToDelete = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
@@ -505,7 +505,7 @@ public class ReservationSys {
                 // when new record should be kept, delete all conflicted records
                 else {
 
-                    System.out.println("[test] now local record should be deleted");
+//                    System.out.println("[test] now local record should be deleted");
 
                     this.siteTimeStamp += 1;
                     for (int p = 0; p < NE.get(i).getReservation().getFlights().size(); p++) {
@@ -522,7 +522,7 @@ public class ReservationSys {
                             this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
                             this.dict.remove(recToDelete.getReservation());
 
-                            System.out.println("<Update Cancel> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " canceled.");
+//                            System.out.println("<Update Cancel> Reservation record for: " + conflictsRecords.get(j).getReservation().getClientName() + " canceled.");
                         }
                     }
 
@@ -583,7 +583,7 @@ public class ReservationSys {
             }
             // to delete
             if (flag == 0) {
-                System.out.println("[test] now truncating log for event record: " + curRec.flatten());
+//                System.out.println("[test] now truncating log for event record: " + curRec.flatten());
 
                 log.remove(curRec);
             }
@@ -596,9 +596,14 @@ public class ReservationSys {
     public void printLog() {//private ArrayList<EventRecord> log;
         for (int i = 0; i < log.size(); i++) {
             EventRecord cur = log.get(i);
-            System.out.println(cur.getOperation() + " " +
-                    cur.getReservation().getClientName() + " "
-                    + cur.getReservation().printFlight());
+            if (cur.getOperation().equals("delete")) {
+                System.out.println(cur.getOperation() + " " +
+                        cur.getReservation().getClientName());
+            } else {
+                System.out.println(cur.getOperation() + " " +
+                        cur.getReservation().getClientName() + " "
+                        + cur.getReservation().printFlight());
+            }
         }
     }
 

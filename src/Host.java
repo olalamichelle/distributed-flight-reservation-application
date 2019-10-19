@@ -144,7 +144,7 @@ public class Host {
                 ArrayList<String> recipients = new ArrayList<>();
                 recipients.add(recipient);
                 sendMsgToOthers(mySite, sendSocket, sitesInfo, recipients);
-
+            // FIXME: Send the same msg to all others
             } else if (input[0].equals("sendall")) {// Send log to all sites
                 ArrayList<String> recipients = new ArrayList<>();
                 for (int i = 0; i < sitesInfo.size(); i++) {
@@ -183,13 +183,15 @@ public class Host {
         }
     }
 
-    public static CommunicateInfo buildMsg(ReservationSys mySite, String targetSite, ArrayList<HashMap<String, String>> sitesInfo) {
-        // Identify the the necessary partial log for sending to each target site
+    public static CommunicateInfo buildMsg(ReservationSys mySite, ArrayList<String> recipients, ArrayList<HashMap<String, String>> sitesInfo) {
+        // Identify the the necessary partial log for sending to all other sites
         ArrayList<EventRecord> recordsToSend = new ArrayList<>();
-        for (int i = 0; i < mySite.getLog().size(); i++) {
-            EventRecord curRecord = mySite.getLog().get(i);
-            if (!mySite.hasRec(curRecord, targetSite)) {
-                recordsToSend.add(curRecord);
+        for (int j = 0; j < recipients.size(); j++) {
+            for (int i = 0; i < mySite.getLog().size(); i++) {
+                EventRecord curRecord = mySite.getLog().get(i);
+                if (!mySite.hasRec(curRecord, recipients.get(j)) && !recordsToSend.contains(curRecord)) {
+                    recordsToSend.add(curRecord);
+                }
             }
         }
 
@@ -216,6 +218,9 @@ public class Host {
     public static void sendMsgToOthers(ReservationSys mySite, DatagramSocket sendSocket,
                                 ArrayList<HashMap<String, String>> sitesInfo,
                                 ArrayList<String> recipients) throws IOException {
+        // build one message for all other sites
+        byte[] sendArray = serialize(buildMsg(mySite, recipients, sitesInfo));
+
         for (int i = 0; i < recipients.size(); i++) {
             String ipAddress = null;
             String receivePort = null;
@@ -227,7 +232,6 @@ public class Host {
                 }
             }
             InetAddress targetIP = InetAddress.getByName(ipAddress);
-            byte[] sendArray = serialize(buildMsg(mySite, recipients.get(i), sitesInfo));
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);
 
@@ -240,7 +244,7 @@ public class Host {
                                  ArrayList<String> recipients) throws IOException {
         Integer siteIndex = mySite.siteIdToIdx(mySite.getSiteId());
         Integer[] timeRow = mySite.getTimeTable()[siteIndex];
-
+        byte[] sendArray = serialize(buildSmall(mySite, recipients, sitesInfo, timeRow));
         for (int i = 0; i < recipients.size(); i++) {
             String ipAddress = null;
             String receivePort = null;
@@ -252,7 +256,6 @@ public class Host {
                 }
             }
             InetAddress targetIP = InetAddress.getByName(ipAddress);
-            byte[] sendArray = serialize(buildSmall(mySite, recipients.get(i), sitesInfo, timeRow));
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);
 
@@ -261,14 +264,16 @@ public class Host {
     }
 
 
-    public static CommunicateInfo buildSmall(ReservationSys mySite, String targetSite, ArrayList<HashMap<String, String>> sitesInfo, Integer[] timeRow) {
+    public static CommunicateInfo buildSmall(ReservationSys mySite, ArrayList<String> recipients, ArrayList<HashMap<String, String>> sitesInfo, Integer[] timeRow) {
         // Identify the the necessary partial log for sending to each target site
         ArrayList<EventRecord> recordsToSend = new ArrayList<>();
         //TODO: Any difference in eventRecords?
-        for (int i = 0; i < mySite.getLog().size(); i++) {
-            EventRecord curRecord = mySite.getLog().get(i);
-            if (!mySite.hasRec(curRecord, targetSite)) {
-                recordsToSend.add(curRecord);
+        for (int j = 0; j < recipients.size(); j++) {
+            for (int i = 0; i < mySite.getLog().size(); i++) {
+                EventRecord curRecord = mySite.getLog().get(i);
+                if (!mySite.hasRec(curRecord, recipients.get(j)) && !recordsToSend.contains(curRecord)) {
+                    recordsToSend.add(curRecord);
+                }
             }
         }
         CommunicateInfo smallMsg = new CommunicateInfo(recordsToSend, new Integer[][]{{}}, timeRow, true);

@@ -432,16 +432,21 @@ public class ReservationSys {
         Integer curSiteIdx = siteIdToIdx(this.siteId);
         Integer senderSiteIdx = siteIdToIdx(senderId);
 
-        // 1) update direct knowledge
-        for (int j = 0; j < siteNum; j++) {
-            this.timeTable[curSiteIdx][j] = Integer.max(this.timeTable[curSiteIdx][j], recTimeTable[senderSiteIdx][j]);
-        }
-
-        // 2) update indirect knowledge
-        for (int j = 0; j < siteNum; j++) {
-            for (int l = 0; l < siteNum; l++) {
-                this.timeTable[j][l] = Integer.max(this.timeTable[j][l], recTimeTable[j][l]);
+        if (!recInfo.getType()) {// update timetable
+            // 1) update direct knowledge
+            for (int j = 0; j < siteNum; j++) {
+                this.timeTable[curSiteIdx][j] = Integer.max(this.timeTable[curSiteIdx][j], recTimeTable[senderSiteIdx][j]);
             }
+
+            // 2) update indirect knowledge
+            for (int j = 0; j < siteNum; j++) {
+                for (int l = 0; l < siteNum; l++) {
+                    this.timeTable[j][l] = Integer.max(this.timeTable[j][l], recTimeTable[j][l]);
+                }
+            }
+
+        } else {// update timeRow
+            this.timeTable[senderSiteIdx] = recInfo.getSmallSend();
         }
 
         // 3. update log for every new record

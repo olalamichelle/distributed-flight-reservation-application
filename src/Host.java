@@ -3,10 +3,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,10 +49,6 @@ public class Host {
                 String udpEndPort = siteInfo.get("udp_end_port").toString();
                 String ipAddr = (String) siteInfo.get("ip_address");
 
-//                System.out.println("udp start port: " + udpStartPort);
-//                System.out.println("udp end port: " + udpEndPort);
-//                System.out.println("ip address: " + ipAddr);
-
                 Integer siteIndex = 0;
                 for (int i = 0; i < allSiteId.size(); i++) {
                     if (allSiteId.get(i).equals(Id)) siteIndex = i;
@@ -70,11 +63,6 @@ public class Host {
                 sitesInfo.set(siteIndex, tmp);
 //                System.out.println("key: "+ siteId + " value: " + siteInfo);
             });
-
-//            for (int i = 0; i < sitesInfo.size(); i++) {
-//                HashMap<String,String> curMap = sitesInfo.get(i);
-//                System.out.println("siteId: " + curMap.get("siteId") + " siteIndex: " + i);
-//            }
 
         } catch (IOException | ParseException e) {
             e.printStackTrace();
@@ -125,7 +113,6 @@ public class Host {
 
         // Create send socket by end port number
         DatagramSocket sendSocket = new DatagramSocket(Integer.parseInt(curEndPort));
-//        InetSocketAddress sendAddress = new InetSocketAddress(curIp, Integer.parseInt(curEndPort));
 
         // main thread keeps receiving msgs from user at this site
         while (true) {
@@ -172,11 +159,20 @@ public class Host {
 
             } else if (input[0].equals("smallsend")) {
                 // Implement later
-                System.out.println("Why you do this to me??");
+                String recipient = input[1];
+                ArrayList<String> recipients = new ArrayList<>();
+                recipients.add(recipient);
+                smallSend(mySite, sendSocket, sitesInfo, recipients);
 
             } else if (input[0].equals("smallsendall")) {
                 // Implement later
-                System.out.println("I have no idea what's going on here.");
+                ArrayList<String> recipients = new ArrayList<>();
+                for (int i = 0; i < sitesInfo.size(); i++) {
+                    if (sitesInfo.get(i).get("siteId").equals(curSiteId)) continue;
+                    recipients.add(sitesInfo.get(i).get("siteId"));
+                }
+                smallSend(mySite, sendSocket, sitesInfo, recipients);
+
 
             } else if (input[0].equals("quit")) {
                 System.exit(0);
@@ -197,7 +193,7 @@ public class Host {
             }
         }
 
-        CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable());
+        CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable(), new Integer[]{}, false);
 
 //        System.out.println("[test] now build msg to send: ");
 //        for (int i = 0; i < res.getEventRecords().size(); i++) {
@@ -209,12 +205,6 @@ public class Host {
 
     // Serialize the CommunicateInfo to byte array
     public static byte[] serialize(Object obj) throws IOException {
-//        try(ByteArrayOutputStream b = new ByteArrayOutputStream()){
-//            try(ObjectOutputStream o = new ObjectOutputStream(b)){
-//                o.writeObject(obj);
-//            }
-//            return b.toByteArray();
-//        }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(obj);
@@ -237,7 +227,6 @@ public class Host {
                 }
             }
             InetAddress targetIP = InetAddress.getByName(ipAddress);
-//            InetAddress targetIP = InetAddress.getLocalHost().getHostAddress();
             byte[] sendArray = serialize(buildMsg(mySite, recipients.get(i), sitesInfo));
             DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
             sendSocket.send(sendPacket);
@@ -246,4 +235,49 @@ public class Host {
         }
     }
 
+    public static void smallSend(ReservationSys mySite, DatagramSocket sendSocket,
+                                 ArrayList<HashMap<String, String>> sitesInfo,
+                                 ArrayList<String> recipients) throws IOException {
+        Integer siteIndex = mySite.siteIdToIdx(mySite.getSiteId());
+        Integer[] timeRow = mySite.getTimeTable()[siteIndex];
+
+        for (int i = 0; i < recipients.size(); i++) {
+            String ipAddress = null;
+            String receivePort = null;
+            for (int j = 0; j < sitesInfo.size(); j++) {
+                if (sitesInfo.get(j).get("siteId").equals(recipients.get(i))) {
+                    ipAddress = sitesInfo.get(j).get("ip");
+                    receivePort = sitesInfo.get(j).get("startPort");
+                    break;
+                }
+            }
+            InetAddress targetIP = InetAddress.getByName(ipAddress);
+            byte[] sendArray = serialize(buildSmall(mySite, recipients.get(i), sitesInfo, timeRow));
+            DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
+            sendSocket.send(sendPacket);
+
+//            System.out.println("[test] successfully sent to " + recipients.get(i));
+        }
+    }
+
+
+    public static CommunicateInfo buildSmall(ReservationSys mySite, String targetSite, ArrayList<HashMap<String, String>> sitesInfo, Integer[] timeRow) {
+        // Identify the the necessary partial log for sending to each target site
+        ArrayList<EventRecord> recordsToSend = new ArrayList<>();
+        //TODO: Any difference in eventRecords?
+        for (int i = 0; i < mySite.getLog().size(); i++) {
+            EventRecord curRecord = mySite.getLog().get(i);
+            if (!mySite.hasRec(curRecord, targetSite)) {
+                recordsToSend.add(curRecord);
+            }
+        }
+        CommunicateInfo smallMsg = new CommunicateInfo(recordsToSend, new Integer[][]{{}}, timeRow, true);
+
+//        System.out.println("[test] now build msg to send: ");
+//        for (int i = 0; i < res.getEventRecords().size(); i++) {
+//            System.out.println("[test] " + res.getEventRecords().get(i).flatten());
+//        }
+
+        return smallMsg;
+    }
 }

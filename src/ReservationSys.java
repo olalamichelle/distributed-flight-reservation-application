@@ -396,7 +396,7 @@ public class ReservationSys {
         Integer curSiteIdx = siteIdToIdx(this.siteId);
         this.timeTable[curSiteIdx][curSiteIdx] = this.siteTimeStamp;
 
-        System.out.println("Reservation of client" + clientName + " cancelled.");
+        System.out.println("Reservation for " + clientName + " cancelled.");
         // backup for site recovery
         this.record();
         return true;

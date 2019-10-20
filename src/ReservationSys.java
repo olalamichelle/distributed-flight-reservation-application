@@ -323,11 +323,6 @@ public class ReservationSys {
 
         Collections.sort(conflictRecord);
 
-//        System.out.println(conflictRecord.size() + "???anything wron? but I firstly got ");
-//        for (int i = 0; i < conflictRecord.size(); i++) {
-//            System.out.println(conflictRecord.get(i).getReservation().flatten());
-//        }
-
         return conflictRecord;
     }
 
@@ -406,12 +401,6 @@ public class ReservationSys {
         // 1. resolve received information
         ArrayList<EventRecord> recEventRecords = recInfo.getEventRecords();
 
-//        System.out.println("[test] now received event record is: ");
-//        for (int i = 0; i < recEventRecords.size(); i++) {
-//            System.out.println("[test] " + recEventRecords.get(i).flatten());
-//        }
-//        System.out.println("[test] size is: " + recEventRecords.size());
-
         Integer siteNum = this.sitesInfo.size();
         Integer[][] recTimeTable = recInfo.getTimeTable();
 
@@ -423,10 +412,6 @@ public class ReservationSys {
             }
         }
 
-//        System.out.println("&&&&&&now new records received are");
-//        for (int i = 0; i < NE.size(); i++) {
-//            System.out.println(NE.get(i).getReservation().flatten());
-//        }
 
         // 2. update timetable
         Integer curSiteIdx = siteIdToIdx(this.siteId);
@@ -456,10 +441,6 @@ public class ReservationSys {
 
         // 4. update dictionary for every new record
         for (int i = 0; i < NE.size(); i++) {
-
-//            System.out.println("******now dealing with event record " + NE.get(i).getReservation().flatten());
-//            System.out.println("******and now dictionary is ");
-//            printDictionary();
 
             if (NE.get(i).getOperation().equals("delete")) {
                 this.dict.remove(NE.get(i).getReservation());
@@ -613,10 +594,11 @@ public class ReservationSys {
     }
 
     public void printDictionary() {//private ArrayList<Reservation> dict;
-        for (int i = 0; i < dict.size(); i++) {
-            Collections.sort(dict, new CustomComparator());
-            System.out.println(dict.get(i).getClientName() + " " + dict.get(i).printFlight()
-                    + " " +dict.get(i).getStatus());
+        ArrayList<Reservation> newDict = this.dict;
+        for (int i = 0; i < newDict.size(); i++) {
+            Collections.sort(newDict, new CustomComparator());
+            System.out.println(newDict.get(i).getClientName() + " " + newDict.get(i).printFlight()
+                    + " " +  newDict.get(i).getStatus());
         }
     }
 

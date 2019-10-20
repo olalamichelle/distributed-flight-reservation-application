@@ -122,7 +122,6 @@ public class Host {
 //            System.out.println("[test] User input: " + commandLine);
             String[] input = commandLine.split("\\s+");
 
-            // FIXME: cancel or delete? reserve or insert?
             if (input[0].equals("reserve")) {
                 // insert into my site, update timetable, log and dictionary
                 mySite.insert(input);
@@ -144,7 +143,7 @@ public class Host {
                 ArrayList<String> recipients = new ArrayList<>();
                 recipients.add(recipient);
                 sendMsgToOthers(mySite, sendSocket, sitesInfo, recipients);
-            // FIXME: Send the same msg to all others
+
             } else if (input[0].equals("sendall")) {// Send log to all sites
                 ArrayList<String> recipients = new ArrayList<>();
                 for (int i = 0; i < sitesInfo.size(); i++) {
@@ -152,7 +151,6 @@ public class Host {
                     recipients.add(sitesInfo.get(i).get("siteId"));
                 }
                 sendMsgToOthers(mySite, sendSocket, sitesInfo, recipients);
-
 
             } else if (input[0].equals("clock")) {// Print the matrix clock
                 mySite.printClock();
@@ -196,12 +194,6 @@ public class Host {
         }
 
         CommunicateInfo res = new CommunicateInfo(recordsToSend, mySite.getTimeTable(), new Integer[]{}, false);
-
-//        System.out.println("[test] now build msg to send: ");
-//        for (int i = 0; i < res.getEventRecords().size(); i++) {
-//            System.out.println("[test] " + res.getEventRecords().get(i).flatten());
-//        }
-
         return res;
     }
 
@@ -220,23 +212,7 @@ public class Host {
                                 ArrayList<String> recipients) throws IOException {
         // build one message for all other sites
         byte[] sendArray = serialize(buildMsg(mySite, recipients, sitesInfo));
-
-        for (int i = 0; i < recipients.size(); i++) {
-            String ipAddress = null;
-            String receivePort = null;
-            for (int j = 0; j < sitesInfo.size(); j++) {
-                if (sitesInfo.get(j).get("siteId").equals(recipients.get(i))) {
-                    ipAddress = sitesInfo.get(j).get("ip");
-                    receivePort = sitesInfo.get(j).get("startPort");
-                    break;
-                }
-            }
-            InetAddress targetIP = InetAddress.getByName(ipAddress);
-            DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
-            sendSocket.send(sendPacket);
-
-//            System.out.println("[test] successfully sent to " + recipients.get(i));
-        }
+        UDPSend(recipients, sitesInfo, sendArray, sendSocket);
     }
 
     public static void smallSend(ReservationSys mySite, DatagramSocket sendSocket,
@@ -245,22 +221,7 @@ public class Host {
         Integer siteIndex = mySite.siteIdToIdx(mySite.getSiteId());
         Integer[] timeRow = mySite.getTimeTable()[siteIndex];
         byte[] sendArray = serialize(buildSmall(mySite, recipients, sitesInfo, timeRow));
-        for (int i = 0; i < recipients.size(); i++) {
-            String ipAddress = null;
-            String receivePort = null;
-            for (int j = 0; j < sitesInfo.size(); j++) {
-                if (sitesInfo.get(j).get("siteId").equals(recipients.get(i))) {
-                    ipAddress = sitesInfo.get(j).get("ip");
-                    receivePort = sitesInfo.get(j).get("startPort");
-                    break;
-                }
-            }
-            InetAddress targetIP = InetAddress.getByName(ipAddress);
-            DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
-            sendSocket.send(sendPacket);
-
-//            System.out.println("[test] successfully sent to " + recipients.get(i));
-        }
+        UDPSend(recipients, sitesInfo, sendArray, sendSocket);
     }
 
 
@@ -277,12 +238,23 @@ public class Host {
             }
         }
         CommunicateInfo smallMsg = new CommunicateInfo(recordsToSend, new Integer[][]{{}}, timeRow, true);
-
-//        System.out.println("[test] now build msg to send: ");
-//        for (int i = 0; i < res.getEventRecords().size(); i++) {
-//            System.out.println("[test] " + res.getEventRecords().get(i).flatten());
-//        }
-
         return smallMsg;
+    }
+
+    public static void UDPSend(ArrayList<String> recipients, ArrayList<HashMap<String, String>> sitesInfo, byte[] sendArray, DatagramSocket sendSocket) throws IOException {
+        for (int i = 0; i < recipients.size(); i++) {
+            String ipAddress = null;
+            String receivePort = null;
+            for (int j = 0; j < sitesInfo.size(); j++) {
+                if (sitesInfo.get(j).get("siteId").equals(recipients.get(i))) {
+                    ipAddress = sitesInfo.get(j).get("ip");
+                    receivePort = sitesInfo.get(j).get("startPort");
+                    break;
+                }
+            }
+            InetAddress targetIP = InetAddress.getByName(ipAddress);
+            DatagramPacket sendPacket = new DatagramPacket(sendArray, sendArray.length, targetIP, Integer.parseInt(receivePort));
+            sendSocket.send(sendPacket);
+        }
     }
 }

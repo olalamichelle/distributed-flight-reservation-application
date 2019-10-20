@@ -515,29 +515,6 @@ public class ReservationSys {
                     // add new record into dictionary
                     this.dict.add(NE.get(i).getReservation());
                 }
-//                else if (conflictsRecords.get(0) != NE.get(i)) {
-//                    this.siteTimeStamp += 1;
-//                    EventRecord deleteCurRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, NE.get(i).getReservation());
-//                    this.log.add(deleteCurRec);
-//                    this.dict.remove(NE.get(i).getReservation());
-//                    this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
-//
-//                    System.out.println("<Update Cancel(new)> Reservation record for: " + NE.get(i).getReservation().getClientName() + " canceled.");
-//                }
-//                // delete local record
-//                else {
-//                    this.siteTimeStamp += 1;
-//                    EventRecord deleteLocalRec = new EventRecord("delete", this.siteId, this.siteTimeStamp, conflictsRecords.get(1).getReservation());
-//                    this.log.add(deleteLocalRec);
-//                    this.timeTable[siteIdToIdx(this.siteId)][siteIdToIdx(this.siteId)] = this.siteTimeStamp;
-//                    for (int j = 1; j < conflictsRecords.size(); j++) {
-//                        this.dict.remove(conflictsRecords.get(j).getReservation());
-//                    }
-//                    this.dict.add(NE.get(i).getReservation());
-//
-//
-//                    System.out.println("<Update Cancel(local)> Reservation record for: " + conflictsRecords.get(1).getReservation().getClientName() + " canceled.");
-//
             }
         }
 

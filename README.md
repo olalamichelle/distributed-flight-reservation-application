@@ -18,6 +18,9 @@ We implemented a distributed flight reservation system by Java and it includes 6
 6. EventRecord.java
 
 ## II. Project Design
+### Algorithm:
+Wuu Bernstein Replicated Dictionary Algorithm
+
 ### Data structures:
 1. EventRecord (Reservation reservation, String operation, String siteId, int siteTimestamp)
   >Used to record the details, operation, and timestamp of the event.
